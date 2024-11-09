@@ -1,8 +1,12 @@
+mod utils;
+
+use crate::utils::parse_workspace;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
-use log::{debug, info};
+use log::debug;
+use std::path::{Path, PathBuf};
 
-pub fn list_all_targets(repo: &Repository, base: Option<String>) -> Result<()> {
+pub fn list_affected_files(repo: &Repository, base: Option<String>) -> Result<()> {
     // Get the current branch (HEAD)
     let head = repo.head().context("Could not retrieve HEAD")?;
     let current_branch = head
@@ -58,7 +62,24 @@ pub fn list_all_targets(repo: &Repository, base: Option<String>) -> Result<()> {
     Ok(())
 }
 
-pub fn list_projects(_repo: &Repository, _main: Option<String>) -> Result<()> {
-    info!("Projects (coming soon)");
+pub fn list_affected_projects(
+    workspace_root: &PathBuf,
+    _repo: &Repository,
+    _main: Option<String>,
+) -> Result<()> {
+    let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
+    let projects = parse_workspace(workspace_root, filter_fn)?;
+    println!("Projects: {:#?}", projects);
+    Ok(())
+}
+
+pub fn list_all_projects(
+    workspace_root: &PathBuf,
+    _repo: &Repository,
+    _main: Option<String>,
+) -> Result<()> {
+    let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
+    let projects = parse_workspace(workspace_root, filter_fn)?;
+    println!("Projects: {:#?}", projects);
     Ok(())
 }

@@ -1,4 +1,4 @@
-use affected::{list_all_targets, list_projects};
+use affected::{list_affected_files, list_affected_projects, list_all_projects};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
@@ -40,6 +40,7 @@ enum FilesCommands {
 
 #[derive(Subcommand)]
 enum ProjectsCommands {
+    All,
     List,
 }
 
@@ -65,9 +66,9 @@ fn main() -> Result<()> {
     let workspace_root = cli
         .repo
         .unwrap_or_else(|| std::env::current_dir().expect("Failed to get the repository path"));
-    debug!("Using repository: {:?}", workspace_root);
+    debug!("Using repository: {:?}", &workspace_root);
 
-    let repo = Repository::open(workspace_root).expect("Could not open the repository");
+    let repo = Repository::open(&workspace_root).expect("Could not open the repository");
 
     // TODO: introduce flag to fetch from remote
     // Fetch the latest changes from the remote repository
@@ -81,12 +82,15 @@ fn main() -> Result<()> {
     match &cli.command {
         Commands::Files(subcommand) => match subcommand {
             FilesCommands::List => {
-                list_all_targets(&repo, cli.base)?;
+                list_affected_files(&repo, cli.base)?;
             }
         },
         Commands::Projects(subcommand) => match subcommand {
+            ProjectsCommands::All => {
+                list_all_projects(&workspace_root, &repo, cli.base)?;
+            }
             ProjectsCommands::List => {
-                list_projects(&repo, cli.base)?;
+                list_affected_projects(&workspace_root, &repo, cli.base)?;
             }
         },
     }
