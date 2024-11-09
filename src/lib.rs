@@ -61,7 +61,7 @@ pub fn list_all_targets(workspace_root: PathBuf, main: String) -> Result<()> {
     // Iterate over the diff entries and print the file paths
     for delta in diff.deltas() {
         if let Some(path) = delta.new_file().path() {
-            info!("{}", path.display());
+            println!("{}", path.display());
         }
     }
 
