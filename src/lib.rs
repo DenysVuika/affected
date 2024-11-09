@@ -1,7 +1,9 @@
 mod node;
 pub mod nx;
+mod project;
 mod utils;
 
+use crate::project::Project;
 use crate::utils::parse_workspace;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
@@ -113,17 +115,22 @@ pub fn list_all_projects(
     Ok(())
 }
 
-pub fn get_project_name(project_path: &Path) -> Result<String> {
+fn get_project(project_path: &Path) -> Result<Box<dyn Project>> {
     let project_json_path = project_path.join("project.json");
     let package_json_path = project_path.join("package.json");
 
     if project_json_path.is_file() {
         let nx_proj = nx::NxProject::load(&project_json_path)?;
-        Ok(nx_proj.name)
+        Ok(Box::new(nx_proj))
     } else if package_json_path.is_file() {
         let node_proj = node::NodeProject::load(&package_json_path)?;
-        Ok(node_proj.name)
+        Ok(Box::new(node_proj))
     } else {
         bail!("Could not find 'project.json' or 'package.json' in the project directory");
     }
+}
+
+pub fn get_project_name(project_path: &Path) -> Result<String> {
+    let project = get_project(project_path)?;
+    Ok(project.name().to_string())
 }

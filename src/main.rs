@@ -1,6 +1,4 @@
-use affected::{
-    get_project_name, list_affected_files, list_affected_projects, list_all_projects, nx,
-};
+use affected::{get_project_name, list_affected_files, list_affected_projects, list_all_projects};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
