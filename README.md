@@ -2,6 +2,14 @@
 
 A tool to find affected files or projects in a git repository.
 
+## Installation
+
+### From Crates.io
+
+```bash
+cargo install affected
+```
+
 ## Usage
 
 The format of the command is:
