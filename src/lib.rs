@@ -4,9 +4,10 @@ use crate::utils::parse_workspace;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
 use log::debug;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub fn list_affected_files(repo: &Repository, base: Option<String>) -> Result<()> {
+pub fn list_affected_files(repo: &Repository, base: Option<String>) -> Result<Vec<String>> {
     // Get the current branch (HEAD)
     let head = repo.head().context("Could not retrieve HEAD")?;
     let current_branch = head
@@ -52,25 +53,41 @@ pub fn list_affected_files(repo: &Repository, base: Option<String>) -> Result<()
     let diff =
         repo.diff_tree_to_tree(Some(&base_tree), Some(&current_tree), Some(&mut diff_opts))?;
 
+    let mut result = vec![];
+
     // Iterate over the diff entries and print the file paths
     for delta in diff.deltas() {
         if let Some(path) = delta.new_file().path() {
-            println!("{}", path.display());
+            result.push(path.to_string_lossy().to_string());
         }
     }
 
-    Ok(())
+    Ok(result)
 }
 
 pub fn list_affected_projects(
     workspace_root: &PathBuf,
-    _repo: &Repository,
-    _main: Option<String>,
-) -> Result<()> {
+    repo: &Repository,
+    main: Option<String>,
+) -> Result<Vec<String>> {
     let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
     let projects = parse_workspace(workspace_root, filter_fn)?;
-    println!("Projects: {:#?}", projects);
-    Ok(())
+    let mut affected_projects = HashSet::new();
+
+    if !projects.is_empty() {
+        let affected_files = list_affected_files(repo, main)?;
+        // Check if any of the affected files are in the projects
+        for project in projects {
+            for file in &affected_files {
+                if file.starts_with(&project) {
+                    affected_projects.insert(project.clone());
+                    break;
+                }
+            }
+        }
+    }
+
+    Ok(affected_projects.into_iter().collect())
 }
 
 pub fn list_all_projects(
@@ -80,6 +97,9 @@ pub fn list_all_projects(
 ) -> Result<()> {
     let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
     let projects = parse_workspace(workspace_root, filter_fn)?;
-    println!("Projects: {:#?}", projects);
+
+    for project in projects {
+        println!("{}", project);
+    }
     Ok(())
 }

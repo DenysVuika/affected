@@ -82,7 +82,10 @@ fn main() -> Result<()> {
     match &cli.command {
         Commands::Files(subcommand) => match subcommand {
             FilesCommands::List => {
-                list_affected_files(&repo, cli.base)?;
+                let files = list_affected_files(&repo, cli.base)?;
+                for file in files {
+                    println!("{}", file);
+                }
             }
         },
         Commands::Projects(subcommand) => match subcommand {
@@ -90,7 +93,10 @@ fn main() -> Result<()> {
                 list_all_projects(&workspace_root, &repo, cli.base)?;
             }
             ProjectsCommands::List => {
-                list_affected_projects(&workspace_root, &repo, cli.base)?;
+                let projects = list_affected_projects(&workspace_root, &repo, cli.base)?;
+                for project in projects {
+                    println!("{}", project);
+                }
             }
         },
     }
