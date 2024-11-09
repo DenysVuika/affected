@@ -2,7 +2,7 @@ use affected::{list_all_targets, list_projects};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
-use log::{debug, info};
+use log::debug;
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -10,9 +10,9 @@ use std::path::PathBuf;
 #[command(name = "affected")]
 #[command(about = "A tool to find affected files or projects in a git repository", long_about = None)]
 struct Cli {
-    /// Optional working directory, defaults to current directory
+    /// Optional repo path, defaults to current directory
     #[arg(long)]
-    working_dir: Option<PathBuf>,
+    repo: Option<PathBuf>,
 
     /// Optional main branch name, defaults to "main"
     #[arg(long, default_value = "main")]
@@ -55,7 +55,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let workspace_dir = cli
-        .working_dir
+        .repo
         .unwrap_or_else(|| std::env::current_dir().expect("Failed to get current directory"));
     debug!("Using working directory: {:?}", workspace_dir);
 

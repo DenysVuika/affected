@@ -6,8 +6,22 @@ A tool to find affected files or projects in a git repository.
 
 ## Usage
 
+The format of the command is:
+
 ```bash
 affected [OPTIONS] <COMMAND>
+```
+
+### Example
+
+For the feature branch checked out, and the main branch is `develop`:
+
+```bash
+# List all affected files in the current repository
+affected --main=develop list all
+
+# List all affected files in a different repository
+affected --repo=/path/to/repo --main=develop list all
 ```
 
 ## Log Levels
@@ -28,3 +42,12 @@ The following log levels are available:
 - `ERROR`
 
 The default log level is `INFO`.
+
+## Local Development
+
+Linking the binary for global use:
+
+```shell
+cargo build
+sudo ln -s $(pwd)/target/debug/affected /usr/local/bin/affected
+```
