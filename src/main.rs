@@ -1,4 +1,6 @@
-use affected::{list_affected_files, list_affected_projects, list_all_projects};
+use affected::{
+    get_project_name, list_affected_files, list_affected_projects, list_all_projects, nx,
+};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
@@ -95,7 +97,8 @@ fn main() -> Result<()> {
             ProjectsCommands::List => {
                 let projects = list_affected_projects(&workspace_root, &repo, cli.base)?;
                 for project in projects {
-                    println!("{}", project);
+                    let project_name = get_project_name(&workspace_root.join(&project))?;
+                    println!("{}", project_name);
                 }
             }
         },

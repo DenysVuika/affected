@@ -1,3 +1,4 @@
+pub mod nx;
 mod utils;
 
 use crate::utils::parse_workspace;
@@ -108,4 +109,24 @@ pub fn list_all_projects(
         println!("{}", project);
     }
     Ok(())
+}
+
+pub fn get_project_name(project_path: &Path) -> Result<String> {
+    let project_json_path = project_path.join("project.json");
+    let package_json_path = project_path.join("package.json");
+
+    if project_json_path.is_file() {
+        let nx = nx::NxProject::load(&project_json_path)?;
+        Ok(nx.name)
+    } else if package_json_path.is_file() {
+        let package_json = std::fs::read_to_string(&package_json_path)?;
+        let package_json: serde_json::Value = serde_json::from_str(&package_json)?;
+        if let Some(name) = package_json.get("name") {
+            Ok(name.as_str().unwrap().to_string())
+        } else {
+            bail!("Could not find 'name' in package.json");
+        }
+    } else {
+        bail!("Could not find 'project.json' or 'package.json' in the project directory");
+    }
 }
