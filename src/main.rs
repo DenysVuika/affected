@@ -2,6 +2,7 @@ use affected::{list_all_targets, list_projects};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
+use git2::Repository;
 use log::debug;
 use std::io::Write;
 use std::path::PathBuf;
@@ -14,8 +15,8 @@ struct Cli {
     #[arg(long)]
     repo: Option<PathBuf>,
 
-    /// Optional main branch name, defaults to "main"
-    #[arg(long, default_value = "main")]
+    /// Optional main branch name, evaluates to 'main' or 'master' if not provided
+    #[arg(long)]
     main: Option<String>,
 
     /// The subcommand to run
@@ -54,18 +55,17 @@ fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
-    let workspace_dir = cli
+    let workspace_root = cli
         .repo
-        .unwrap_or_else(|| std::env::current_dir().expect("Failed to get current directory"));
-    debug!("Using working directory: {:?}", workspace_dir);
+        .unwrap_or_else(|| std::env::current_dir().expect("Failed to get the repository path"));
+    debug!("Using repository: {:?}", workspace_root);
 
-    let main = cli.main.unwrap();
-    debug!("Using main branch: {}", main.clone());
+    let repo = Repository::open(workspace_root).expect("Could not open the repository");
 
     match &cli.command {
         Commands::List(subcommand) => match subcommand {
             ListTargets::All => {
-                list_all_targets(workspace_dir, main.clone())?;
+                list_all_targets(&repo, cli.main)?;
             }
             ListTargets::Projects => {
                 list_projects()?;

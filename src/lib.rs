@@ -1,11 +1,10 @@
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
 use log::{debug, info};
-use std::path::PathBuf;
 
-pub fn list_all_targets(workspace_root: PathBuf, main: String) -> Result<()> {
+pub fn list_all_targets(repo: &Repository, main: Option<String>) -> Result<()> {
     // Open the Git repository in the current directory
-    let repo = Repository::open(workspace_root).context("Could not open the repository")?;
+    // let repo = Repository::open(workspace_root).context("Could not open the repository")?;
 
     // TODO: introduce flag to fetch from remote
     // Fetch the latest changes from the remote repository
@@ -23,21 +22,24 @@ pub fn list_all_targets(workspace_root: PathBuf, main: String) -> Result<()> {
         .ok_or_else(|| anyhow::anyhow!("Could not determine current branch"))?;
     debug!("Current branch: {}", current_branch);
 
-    // Determine the main branch
-    let main_branch = if repo.find_branch(&main, BranchType::Local).is_ok() {
-        &main
+    // Get the OIDs (object IDs) for the current branch and the main branch
+    let current_oid = head.target().context("Could not get current branch OID")?;
+    debug!("Current OID: {}", current_oid);
+
+    let main_branch = if let Some(main) = main {
+        if repo.find_branch(&main, BranchType::Local).is_ok() {
+            main
+        } else {
+            bail!("Could not find the specified main branch '{}'", main);
+        }
     } else if repo.find_branch("main", BranchType::Local).is_ok() {
-        "main"
+        "main".to_string()
     } else if repo.find_branch("master", BranchType::Local).is_ok() {
-        "master"
+        "master".to_string()
     } else {
         bail!("Could not find 'main' or 'master' branch");
     };
     debug!("Main branch: {}", main_branch);
-
-    // Get the OIDs (object IDs) for the current branch and the main branch
-    let current_oid = head.target().context("Could not get current branch OID")?;
-    debug!("Current OID: {}", current_oid);
 
     let main_ref = format!("refs/heads/{}", main_branch);
     debug!("Main ref: {}", main_ref);
@@ -69,6 +71,6 @@ pub fn list_all_targets(workspace_root: PathBuf, main: String) -> Result<()> {
 }
 
 pub fn list_projects() -> Result<()> {
-    info!("Projects");
+    info!("Projects (coming soon)");
     Ok(())
 }
