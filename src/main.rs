@@ -69,6 +69,15 @@ fn main() -> Result<()> {
 
     let repo = Repository::open(workspace_root).expect("Could not open the repository");
 
+    // TODO: introduce flag to fetch from remote
+    // Fetch the latest changes from the remote repository
+    // let mut remote = repo
+    //     .find_remote("origin")
+    //     .context("Could not find remote 'origin'")?;
+    // remote
+    //     .fetch(&["refs/heads/*:refs/remotes/origin/*"], None, None)
+    //     .context("Failed to fetch from remote repository")?;
+
     match &cli.command {
         Commands::Files(subcommand) => match subcommand {
             FilesCommands::List => {

@@ -3,18 +3,6 @@ use git2::{BranchType, DiffOptions, Repository};
 use log::{debug, info};
 
 pub fn list_all_targets(repo: &Repository, main: Option<String>) -> Result<()> {
-    // Open the Git repository in the current directory
-    // let repo = Repository::open(workspace_root).context("Could not open the repository")?;
-
-    // TODO: introduce flag to fetch from remote
-    // Fetch the latest changes from the remote repository
-    // let mut remote = repo
-    //     .find_remote("origin")
-    //     .context("Could not find remote 'origin'")?;
-    // remote
-    //     .fetch(&["refs/heads/*:refs/remotes/origin/*"], None, None)
-    //     .context("Failed to fetch from remote repository")?;
-
     // Get the current branch (HEAD)
     let head = repo.head().context("Could not retrieve HEAD")?;
     let current_branch = head
