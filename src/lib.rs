@@ -3,7 +3,7 @@ mod utils;
 use crate::utils::parse_workspace;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
-use log::{debug, info};
+use log::debug;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
