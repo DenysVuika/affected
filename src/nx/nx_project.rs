@@ -4,9 +4,22 @@ use serde::Deserialize;
 use std::fs;
 use std::path::Path;
 
+/// A struct representing a Nx project
 #[derive(Debug, Deserialize)]
 pub struct NxProject {
+    /// The name of the project
     pub name: String,
+    /// The type of project. Can be either `library` or `application`
+    #[serde(rename = "projectType")]
+    pub project_type: ProjectType,
+}
+
+/// An enum representing the type of project
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ProjectType {
+    Library,
+    Application,
 }
 
 impl Project for NxProject {

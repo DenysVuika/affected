@@ -121,9 +121,11 @@ fn get_project(project_path: &Path) -> Result<Box<dyn Project>> {
 
     if project_json_path.is_file() {
         let nx_proj = nx::NxProject::load(&project_json_path)?;
+        debug!("{:?}", nx_proj);
         Ok(Box::new(nx_proj))
     } else if package_json_path.is_file() {
         let node_proj = node::NodeProject::load(&package_json_path)?;
+        debug!("{:?}", node_proj);
         Ok(Box::new(node_proj))
     } else {
         bail!("Could not find 'project.json' or 'package.json' in the project directory");
