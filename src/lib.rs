@@ -70,7 +70,7 @@ pub fn list_all_targets(repo: &Repository, main: Option<String>) -> Result<()> {
     Ok(())
 }
 
-pub fn list_projects() -> Result<()> {
+pub fn list_projects(_repo: &Repository, _main: Option<String>) -> Result<()> {
     info!("Projects (coming soon)");
     Ok(())
 }

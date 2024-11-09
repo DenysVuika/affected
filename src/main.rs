@@ -27,13 +27,20 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     #[command(subcommand)]
-    List(ListTargets),
+    Files(FilesCommands),
+
+    #[command(subcommand)]
+    Projects(ProjectsCommands),
 }
 
 #[derive(Subcommand)]
-enum ListTargets {
-    All,
-    Projects,
+enum FilesCommands {
+    List,
+}
+
+#[derive(Subcommand)]
+enum ProjectsCommands {
+    List,
 }
 
 fn main() -> Result<()> {
@@ -63,12 +70,14 @@ fn main() -> Result<()> {
     let repo = Repository::open(workspace_root).expect("Could not open the repository");
 
     match &cli.command {
-        Commands::List(subcommand) => match subcommand {
-            ListTargets::All => {
+        Commands::Files(subcommand) => match subcommand {
+            FilesCommands::List => {
                 list_all_targets(&repo, cli.main)?;
             }
-            ListTargets::Projects => {
-                list_projects()?;
+        },
+        Commands::Projects(subcommand) => match subcommand {
+            ProjectsCommands::List => {
+                list_projects(&repo, cli.main)?;
             }
         },
     }
