@@ -3,7 +3,7 @@ mod utils;
 use crate::utils::parse_workspace;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
-use log::debug;
+use log::{debug, info};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -65,24 +65,30 @@ pub fn list_affected_files(repo: &Repository, base: Option<String>) -> Result<Ve
     Ok(result)
 }
 
+fn is_project_dir(path: &Path) -> bool {
+    path.is_dir()
+        && (path.join("project.json").is_file()
+            || path.join("package.json").is_file()
+            || path.join("Cargo.toml").is_file())
+}
+
+// TODO: provide a way to specify the display options: name as folder, package.json, project.json, etc.
 pub fn list_affected_projects(
     workspace_root: &PathBuf,
     repo: &Repository,
     main: Option<String>,
 ) -> Result<Vec<String>> {
-    let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
-    let projects = parse_workspace(workspace_root, filter_fn)?;
+    let projects = parse_workspace(workspace_root, is_project_dir)?;
     let mut affected_projects = HashSet::new();
 
     if !projects.is_empty() {
-        let affected_files = list_affected_files(repo, main)?;
+        let affected_files: HashSet<_> = list_affected_files(repo, main)?.into_iter().collect();
         // Check if any of the affected files are in the projects
         for project in projects {
-            for file in &affected_files {
-                if file.starts_with(&project) {
-                    affected_projects.insert(project.clone());
-                    break;
-                }
+            if affected_files.iter().any(|file| file.starts_with(&project)) {
+                affected_projects.insert(project);
+            } else {
+                debug!("Skipping project '{}'", project);
             }
         }
     }

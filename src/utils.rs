@@ -19,11 +19,14 @@ where
                 let path = entry.path().to_path_buf();
 
                 if let Ok(relative_path) = path.strip_prefix(&workspace_root) {
+                    // check if we have not reached the root directory
+                    if relative_path.to_string_lossy().is_empty() {
+                        continue;
+                    }
                     if filter_fn(&path) {
-                        // process_path(
-                        //     relative_path,
-                        // );
-                        paths.push(relative_path.to_string_lossy().to_string());
+                        if !relative_path.to_string_lossy().is_empty() {
+                            paths.push(relative_path.to_string_lossy().to_string());
+                        }
                     }
                 }
             }
