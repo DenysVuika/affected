@@ -1,3 +1,4 @@
+mod node;
 pub mod nx;
 mod utils;
 
@@ -68,9 +69,10 @@ pub fn list_affected_files(repo: &Repository, base: Option<String>) -> Result<Ve
 
 fn is_project_dir(path: &Path) -> bool {
     path.is_dir()
-        && (path.join("project.json").is_file()
-            || path.join("package.json").is_file()
-            || path.join("Cargo.toml").is_file())
+        && (
+            path.join("project.json").is_file() || path.join("package.json").is_file()
+            // || path.join("Cargo.toml").is_file()
+        )
 }
 
 // TODO: provide a way to specify the display options: name as folder, package.json, project.json, etc.
@@ -116,16 +118,11 @@ pub fn get_project_name(project_path: &Path) -> Result<String> {
     let package_json_path = project_path.join("package.json");
 
     if project_json_path.is_file() {
-        let nx = nx::NxProject::load(&project_json_path)?;
-        Ok(nx.name)
+        let nx_proj = nx::NxProject::load(&project_json_path)?;
+        Ok(nx_proj.name)
     } else if package_json_path.is_file() {
-        let package_json = std::fs::read_to_string(&package_json_path)?;
-        let package_json: serde_json::Value = serde_json::from_str(&package_json)?;
-        if let Some(name) = package_json.get("name") {
-            Ok(name.as_str().unwrap().to_string())
-        } else {
-            bail!("Could not find 'name' in package.json");
-        }
+        let node_proj = node::NodeProject::load(&package_json_path)?;
+        Ok(node_proj.name)
     } else {
         bail!("Could not find 'project.json' or 'package.json' in the project directory");
     }
