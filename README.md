@@ -16,7 +16,7 @@ Commands:
 
 Options:
       --repo <REPO>  Optional repo path, defaults to current directory
-      --main <MAIN>  Optional main branch name, evaluates to 'main' or 'master' if not provided
+      --base <BASE>  Base of the current branch (usually main). Falls back to 'main' or 'master' if not provided
   -h, --help         Print help
 ```
 
@@ -26,10 +26,10 @@ For the feature branch checked out, and the main branch is `develop`:
 
 ```bash
 # List all affected files in the current repository
-affected --main=develop files list
+affected --base=develop files list
 
 # List all affected files in a different repository
-affected --repo=/path/to/repo --main=develop files list
+affected --repo=/path/to/repo --base=develop files list
 ```
 
 ## Log Levels

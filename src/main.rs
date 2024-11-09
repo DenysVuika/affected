@@ -15,9 +15,9 @@ struct Cli {
     #[arg(long)]
     repo: Option<PathBuf>,
 
-    /// Optional main branch name, evaluates to 'main' or 'master' if not provided
+    /// Base of the current branch (usually main). Falls back to 'main' or 'master' if not provided.
     #[arg(long)]
-    main: Option<String>,
+    base: Option<String>,
 
     /// The subcommand to run
     #[command(subcommand)]
@@ -81,12 +81,12 @@ fn main() -> Result<()> {
     match &cli.command {
         Commands::Files(subcommand) => match subcommand {
             FilesCommands::List => {
-                list_all_targets(&repo, cli.main)?;
+                list_all_targets(&repo, cli.base)?;
             }
         },
         Commands::Projects(subcommand) => match subcommand {
             ProjectsCommands::List => {
-                list_projects(&repo, cli.main)?;
+                list_projects(&repo, cli.base)?;
             }
         },
     }
