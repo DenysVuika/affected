@@ -9,12 +9,17 @@ use std::path::Path;
 pub struct NxProject {
     /// The name of the project
     pub name: Option<String>,
+    /// Project's location relative to the root of the workspace
+    pub root: Option<String>,
     /// The location of project's sources relative to the root of the workspace
     #[serde(rename = "sourceRoot")]
     pub source_root: Option<String>,
     /// Type of project supported
     #[serde(rename = "projectType")]
     pub project_type: Option<ProjectType>,
+    pub tags: Option<Vec<String>>,
+    #[serde(rename = "implicitDependencies")]
+    pub implicit_dependencies: Option<Vec<String>>,
 }
 
 /// An enum representing the type of project
