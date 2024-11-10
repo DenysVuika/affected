@@ -8,10 +8,13 @@ use std::path::Path;
 #[derive(Debug, Deserialize)]
 pub struct NxProject {
     /// The name of the project
-    pub name: String,
-    /// The type of project. Can be either `library` or `application`
+    pub name: Option<String>,
+    /// The location of project's sources relative to the root of the workspace
+    #[serde(rename = "sourceRoot")]
+    pub source_root: Option<String>,
+    /// Type of project supported
     #[serde(rename = "projectType")]
-    pub project_type: ProjectType,
+    pub project_type: Option<ProjectType>,
 }
 
 /// An enum representing the type of project
@@ -23,8 +26,8 @@ pub enum ProjectType {
 }
 
 impl Project for NxProject {
-    fn name(&self) -> &str {
-        &self.name
+    fn name(&self) -> Option<&str> {
+        self.name.as_deref()
     }
 
     fn load(path: &Path) -> Result<Self> {

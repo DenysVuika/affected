@@ -1,5 +1,5 @@
-use affected::{get_project_name, list_affected_files, list_affected_projects, list_all_projects};
-use anyhow::Result;
+use affected::{get_project, list_affected_files, list_affected_projects, list_all_projects};
+use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
 use git2::Repository;
@@ -93,10 +93,14 @@ fn main() -> Result<()> {
                 list_all_projects(&workspace_root, &repo, cli.base)?;
             }
             ProjectsCommands::List => {
-                let projects = list_affected_projects(&workspace_root, &repo, cli.base)?;
-                for project in projects {
-                    let project_name = get_project_name(&workspace_root.join(&project))?;
-                    println!("{}", project_name);
+                let project_paths = list_affected_projects(&workspace_root, &repo, cli.base)?;
+                for project_path in project_paths {
+                    let project = get_project(&workspace_root.join(&project_path))?;
+                    let name = match project.name() {
+                        Some(name) => name,
+                        None => bail!("Project name is not defined"),
+                    };
+                    println!("{}", name);
                 }
             }
         },

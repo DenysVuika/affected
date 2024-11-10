@@ -115,7 +115,7 @@ pub fn list_all_projects(
     Ok(())
 }
 
-fn get_project(project_path: &Path) -> Result<Box<dyn Project>> {
+pub fn get_project(project_path: &Path) -> Result<Box<dyn Project>> {
     let project_json_path = project_path.join("project.json");
     let package_json_path = project_path.join("package.json");
 
@@ -130,9 +130,4 @@ fn get_project(project_path: &Path) -> Result<Box<dyn Project>> {
     } else {
         bail!("Could not find 'project.json' or 'package.json' in the project directory");
     }
-}
-
-pub fn get_project_name(project_path: &Path) -> Result<String> {
-    let project = get_project(project_path)?;
-    Ok(project.name().to_string())
 }

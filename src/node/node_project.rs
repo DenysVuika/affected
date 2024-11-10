@@ -6,12 +6,12 @@ use std::path::Path;
 
 #[derive(Debug, Deserialize)]
 pub struct NodeProject {
-    pub name: String,
+    pub name: Option<String>,
 }
 
 impl Project for NodeProject {
-    fn name(&self) -> &str {
-        &self.name
+    fn name(&self) -> Option<&str> {
+        self.name.as_deref()
     }
 
     fn load(path: &Path) -> Result<Self> {
