@@ -1,8 +1,17 @@
+mod node;
+pub mod nx;
+mod project;
+mod utils;
+
+use crate::project::Project;
+use crate::utils::parse_workspace;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
-use log::{debug, info};
+use log::debug;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
-pub fn list_all_targets(repo: &Repository, base: Option<String>) -> Result<()> {
+pub fn list_affected_files(repo: &Repository, base: Option<String>) -> Result<Vec<String>> {
     // Get the current branch (HEAD)
     let head = repo.head().context("Could not retrieve HEAD")?;
     let current_branch = head
@@ -48,17 +57,77 @@ pub fn list_all_targets(repo: &Repository, base: Option<String>) -> Result<()> {
     let diff =
         repo.diff_tree_to_tree(Some(&base_tree), Some(&current_tree), Some(&mut diff_opts))?;
 
+    let mut result = vec![];
+
     // Iterate over the diff entries and print the file paths
     for delta in diff.deltas() {
         if let Some(path) = delta.new_file().path() {
-            println!("{}", path.display());
+            result.push(path.to_string_lossy().to_string());
         }
     }
 
+    Ok(result)
+}
+
+fn is_project_dir(path: &Path) -> bool {
+    path.is_dir()
+        && (
+            path.join("project.json").is_file() || path.join("package.json").is_file()
+            // || path.join("Cargo.toml").is_file()
+        )
+}
+
+// TODO: provide a way to specify the display options: name as folder, package.json, project.json, etc.
+pub fn list_affected_projects(
+    workspace_root: &PathBuf,
+    repo: &Repository,
+    main: Option<String>,
+) -> Result<Vec<String>> {
+    let projects = parse_workspace(workspace_root, is_project_dir)?;
+    let mut affected_projects = HashSet::new();
+
+    if !projects.is_empty() {
+        let affected_files: HashSet<_> = list_affected_files(repo, main)?.into_iter().collect();
+        // Check if any of the affected files are in the projects
+        for project in projects {
+            if affected_files.iter().any(|file| file.starts_with(&project)) {
+                affected_projects.insert(project);
+            } else {
+                debug!("Skipping project '{}'", project);
+            }
+        }
+    }
+
+    Ok(affected_projects.into_iter().collect())
+}
+
+pub fn list_all_projects(
+    workspace_root: &PathBuf,
+    _repo: &Repository,
+    _main: Option<String>,
+) -> Result<()> {
+    let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
+    let projects = parse_workspace(workspace_root, filter_fn)?;
+
+    for project in projects {
+        println!("{}", project);
+    }
     Ok(())
 }
 
-pub fn list_projects(_repo: &Repository, _main: Option<String>) -> Result<()> {
-    info!("Projects (coming soon)");
-    Ok(())
+pub fn get_project(project_path: &Path) -> Result<Box<dyn Project>> {
+    let project_json_path = project_path.join("project.json");
+    let package_json_path = project_path.join("package.json");
+
+    if project_json_path.is_file() {
+        let nx_proj = nx::NxProject::load(&project_json_path)?;
+        debug!("{:?}", nx_proj);
+        Ok(Box::new(nx_proj))
+    } else if package_json_path.is_file() {
+        let node_proj = node::NodeProject::load(&package_json_path)?;
+        debug!("{:?}", node_proj);
+        Ok(Box::new(node_proj))
+    } else {
+        bail!("Could not find 'project.json' or 'package.json' in the project directory");
+    }
 }
