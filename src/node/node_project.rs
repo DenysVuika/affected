@@ -14,7 +14,8 @@ impl Project for NodeProject {
         self.name.as_deref()
     }
 
-    fn load(path: &Path) -> Result<Self> {
+    fn load(workspace_root: &Path, project_path: &str) -> Result<Self> {
+        let path = workspace_root.join(project_path).join("package.json");
         let contents = fs::read_to_string(path)?;
         let project: NodeProject = serde_json::from_str(&contents)?;
         Ok(project)

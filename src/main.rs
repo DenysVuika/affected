@@ -95,7 +95,7 @@ fn main() -> Result<()> {
             ProjectsCommands::List => {
                 let project_paths = list_affected_projects(&workspace_root, &repo, cli.base)?;
                 for project_path in project_paths {
-                    let project = get_project(&workspace_root.join(&project_path))?;
+                    let project = get_project(&workspace_root, &project_path)?;
                     let name = match project.name() {
                         Some(name) => name,
                         None => bail!("Project name is not defined"),
