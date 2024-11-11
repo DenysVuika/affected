@@ -40,8 +40,10 @@ jobs:
       - name: Install OpenSSL (macOS only)
         if: matrix.target == 'x86_64-apple-darwin'
         run: |
-          brew install openssl
-          echo "OPENSSL_DIR=$(brew --prefix openssl)" >> $GITHUB_ENV
+          brew untap homebrew/cask || true
+          brew untap homebrew/core || true
+          brew install openssl@3
+          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
 
       - name: Build binary
         env:
