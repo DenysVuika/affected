@@ -34,6 +34,8 @@ jobs:
         if: matrix.target == 'x86_64-apple-darwin'
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/runner/.bash_profile
+          eval "$(/opt/homebrew/bin/brew shellenv)"
           brew update
           brew doctor
 
