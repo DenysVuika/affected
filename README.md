@@ -74,6 +74,7 @@ tasks:
   - name: lint
     description: Runs eslint for all affected files
     patterns: [ '*.ts', '*.tsx', '*.js', '*.jsx' ]
+    separator: ' ' # Optional separator for the files list
     commands: [ 'echo {files}' ]
 
     # Running eslint for affected files
@@ -81,7 +82,8 @@ tasks:
 ```
 
 The `name` field is the name of the task.  
-The pattern field is an array of file patterns to match.  
+The `patterns` field is an array of file patterns to match.  
+The `separator` field is an optional separator for the files list.  
 The `commands` field is an array of commands to run on the affected files.  
 The `{files}` placeholder is replaced with the list of affected files.
 
@@ -109,7 +111,27 @@ tasks:
 affected run lint
 ```
 
-## Log Levels
+## File Separators
+
+The separator for the list of files can be set using the `separators` task field.
+This is useful when the command requires a different separator than the default.
+
+For example, the `karma` task requires a comma-separated list of files.
+
+```yaml
+tasks:
+  - name: karma
+    description: Runs karma for all affected files
+    patterns: [ '*.ts' ]
+    separator: ',' # Comma-separated list
+    commands: [ 'karma start --include {files}' ] 
+```
+
+The default separator is a space.
+
+## Developing
+
+### Log Levels
 
 The log level can be set using the `LOG_LEVEL` environment variable.
 
@@ -128,11 +150,15 @@ The following log levels are available:
 
 The default log level is `INFO`.
 
-## Local Development
+### Local Runs
 
-Linking the binary for global use:
+You can compile and run the application locally for testing.
 
 ```shell
 cargo build
 sudo ln -s $(pwd)/target/debug/affected /usr/local/bin/affected
+
+# Run the application
+cd /path/to/repo
+affected view files
 ```

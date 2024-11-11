@@ -34,16 +34,19 @@ impl Default for Config {
                     "*.jsx".to_string(),
                 ],
                 commands: vec!["echo {files}".to_string()],
+                ..Default::default()
             }]),
         }
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[skip_serializing_none]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Task {
     pub name: String,
     pub description: Option<String>,
     pub patterns: Vec<String>,
+    pub separator: Option<String>,
     pub commands: Vec<String>,
 }
 
