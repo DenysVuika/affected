@@ -119,7 +119,8 @@ fn main() -> Result<()> {
             }
         },
         Commands::Run { task } => {
-            run_task_by_name(&repo, &config, task)?;
+            run_task_by_name(&workspace_root, &repo, &config, task)?;
+            println!("Done");
         }
     }
 

@@ -98,6 +98,7 @@ tasks:
       - '*.js'
       - '*.jsx'
     commands:
+      - echo {files}
       - npx eslint {files}
 ```
 

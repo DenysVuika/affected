@@ -139,14 +139,25 @@ pub fn get_project(workspace_root: &Path, project_path: &str) -> Result<Box<dyn 
     }
 }
 
-pub fn run_task_by_name(repo: &Repository, config: &Config, task_name: &str) -> Result<()> {
+pub fn run_task_by_name(
+    workspace_root: &Path,
+    repo: &Repository,
+    config: &Config,
+    task_name: &str,
+) -> Result<()> {
     debug!("Running task: {}", task_name);
 
     let task = config.get_task(task_name).context("Task not found")?;
     let file_paths = list_affected_files(repo, config)?;
 
+    // filter out files that exist on the filesystem
+    let file_paths: Vec<_> = file_paths
+        .into_iter()
+        .filter(|path| workspace_root.join(path).exists())
+        .collect();
+
     if file_paths.is_empty() {
-        println!("No files affected");
+        debug!("No files affected");
         return Ok(());
     }
 
@@ -180,6 +191,7 @@ pub fn run_task_by_name(repo: &Repository, config: &Config, task_name: &str) -> 
         let output = std::process::Command::new("sh")
             .arg("-c")
             .arg(&command_text)
+            .current_dir(workspace_root)
             .output()
             .context("Failed to run the command")?;
 
@@ -187,7 +199,7 @@ pub fn run_task_by_name(repo: &Repository, config: &Config, task_name: &str) -> 
             bail!("Command failed: {}", &command_text);
         }
 
-        println!("{}", String::from_utf8_lossy(&output.stdout));
+        debug!("{}", String::from_utf8_lossy(&output.stdout));
     }
 
     Ok(())
