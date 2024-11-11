@@ -25,6 +25,16 @@ jobs:
         if: matrix.target != 'x86_64-apple-darwin'
         run: cargo install cross --git https://github.com/cross-rs/cross
 
+      - name: Install Homebrew (macOS only)
+        if: matrix.target == 'x86_64-apple-darwin'
+        run: |
+          if ! command -v brew &>/dev/null; then
+            echo "Installing Homebrew...";
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)";
+            echo "eval $(/opt/homebrew/bin/brew shellenv)" >> $GITHUB_ENV;
+            eval "$(/opt/homebrew/bin/brew shellenv)";
+          fi
+
       - name: Install OpenSSL (macOS only)
         if: matrix.target == 'x86_64-apple-darwin'
         run: |
