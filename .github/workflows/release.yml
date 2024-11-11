@@ -37,4 +37,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/your_binary_name
+          path: target/${{ matrix.target }}/release/affected
