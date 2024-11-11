@@ -49,6 +49,19 @@ jobs:
           brew install openssl@3 || brew link --force openssl@3
           echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
 
+      - name: Install OpenSSL (Linux only)
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev
+          echo "OPENSSL_DIR=/usr/lib/ssl" >> $GITHUB_ENV
+          
+      - name: Install OpenSSL (Windows only)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: |
+          choco install openssl
+          echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $GITHUB_ENV
+
       - name: Build binary
         env:
           OPENSSL_DIR: ${{ env.OPENSSL_DIR }} # Set for macOS to locate OpenSSL
