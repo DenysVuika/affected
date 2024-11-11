@@ -72,7 +72,7 @@ jobs:
 
       - name: Build binary
         env:
-          OPENSSL_DIR: ${{ env.OPENSSL_DIR }} # Set for macOS to locate OpenSSL
+          OPENSSL_DIR: ${{ env.OPENSSL_DIR }} # Set for all platforms to locate OpenSSL
         run: |
           if [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
             cargo build --release --target ${{ matrix.target }};
