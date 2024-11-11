@@ -11,7 +11,7 @@ use anyhow::{bail, Context, Result};
 pub use config::Config;
 use git2::{BranchType, DiffOptions, Repository};
 use glob::Pattern;
-use log::debug;
+use log::{debug, error};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -196,10 +196,12 @@ pub fn run_task_by_name(
             .context("Failed to run the command")?;
 
         if !output.status.success() {
+            error!("{}", String::from_utf8_lossy(&output.stdout));
             bail!("Command failed: {}", &command_text);
         }
 
-        debug!("{}", String::from_utf8_lossy(&output.stdout));
+        // TODO: consider showing output to detect the warnings, etc
+        // debug!("{}", String::from_utf8_lossy(&output.stdout));
     }
 
     Ok(())
