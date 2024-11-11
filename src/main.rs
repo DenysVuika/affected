@@ -39,6 +39,7 @@ enum Commands {
 enum ViewCommands {
     Files,
     Projects,
+    Tasks,
 }
 
 fn main() -> Result<()> {
@@ -98,6 +99,15 @@ fn main() -> Result<()> {
                         None => bail!("Project name is not defined"),
                     };
                     println!("{}", name);
+                }
+            }
+            ViewCommands::Tasks => {
+                if let Some(tasks) = &config.tasks {
+                    for task in tasks {
+                        println!("{:?}", task);
+                    }
+                } else {
+                    println!("No tasks defined");
                 }
             }
         },
