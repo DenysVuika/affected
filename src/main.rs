@@ -77,8 +77,10 @@ fn main() -> Result<()> {
 
     let config_path = workspace_root.join(".affected.yml");
     let config = if config_path.exists() {
+        debug!("Config file found at {:?}", &config_path);
         Config::from_file(&config_path)?
     } else {
+        debug!("Config file not found, using a default one");
         Config {
             base: cli.base.clone().or_else(|| Some("main".to_string())),
         }
