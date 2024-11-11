@@ -40,6 +40,8 @@ jobs:
       - name: Install OpenSSL (macOS only)
         if: matrix.target == 'x86_64-apple-darwin'
         run: |
+          echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/runner/.bash_profile
+          eval "$(/opt/homebrew/bin/brew shellenv)"
           brew untap homebrew/cask || true
           brew untap homebrew/core || true
           brew install openssl@3
