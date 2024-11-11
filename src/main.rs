@@ -1,6 +1,6 @@
 use affected::logger::init_logger;
 use affected::{
-    get_project, list_affected_files, list_affected_projects, list_all_projects, Config,
+    get_project, list_affected_files, list_affected_projects, run_task_by_name, Config,
 };
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
@@ -33,6 +33,13 @@ enum Commands {
     /// View affected files or projects
     #[command(subcommand)]
     View(ViewCommands),
+
+    /// Run a specific task
+    #[command(arg_required_else_help = true)]
+    Run {
+        /// The task to run
+        task: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -61,8 +68,8 @@ fn main() -> Result<()> {
     } else {
         debug!("Config file not found, using a default one");
         Config {
-            base: cli.base.clone().or_else(|| Some("main".to_string())),
-            tasks: None,
+            base: cli.base.clone().or(Some("main".to_string())),
+            ..Default::default()
         }
     };
 
@@ -104,13 +111,16 @@ fn main() -> Result<()> {
             ViewCommands::Tasks => {
                 if let Some(tasks) = &config.tasks {
                     for task in tasks {
-                        println!("{:?}", task);
+                        println!("{}", task);
                     }
                 } else {
                     println!("No tasks defined");
                 }
             }
         },
+        Commands::Run { task } => {
+            run_task_by_name(&repo, &config, task)?;
+        }
     }
 
     Ok(())

@@ -63,6 +63,51 @@ affected --base=develop view files
 affected --repo=/path/to/repo --base=develop view projects
 ```
 
+## Tasks
+
+Tasks can be defined in the `.affected.yml` file to run commands on affected files.
+
+```yaml
+base: develop
+
+tasks:
+  - name: lint
+    description: Runs eslint for all affected files
+    patterns: [ '*.ts', '*.tsx', '*.js', '*.jsx' ]
+    commands: [ 'echo {files}' ]
+
+    # Running eslint for affected files
+    # commands: [ 'npx eslint {files}' ]
+```
+
+The `name` field is the name of the task.  
+The pattern field is an array of file patterns to match.  
+The `commands` field is an array of commands to run on the affected files.  
+The `{files}` placeholder is replaced with the list of affected files.
+
+Alternative formatting:
+
+```yaml
+base: main
+tasks:
+  - name: lint
+    description: Runs eslint for all affected files
+    patterns:
+      - '*.ts'
+      - '*.tsx'
+      - '*.js'
+      - '*.jsx'
+    commands:
+      - npx eslint {files}
+```
+
+### Example
+
+```bash
+# Run the 'lint' task
+affected run lint
+```
+
 ## Log Levels
 
 The log level can be set using the `LOG_LEVEL` environment variable.
