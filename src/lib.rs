@@ -182,7 +182,8 @@ pub fn run_task_by_name(
         debug!("- {}", path);
     }
 
-    let files = &filtered_paths.join(" ");
+    let separator = task.separator.as_deref().unwrap_or(" ");
+    let files = &filtered_paths.join(separator);
 
     for command_template in &task.commands {
         let command_text = command_template.replace("{files}", files);
@@ -200,8 +201,7 @@ pub fn run_task_by_name(
             bail!("Command failed: {}", &command_text);
         }
 
-        // TODO: consider showing output to detect the warnings, etc
-        // debug!("{}", String::from_utf8_lossy(&output.stdout));
+        println!("{}", String::from_utf8_lossy(&output.stdout));
     }
 
     Ok(())
