@@ -25,13 +25,21 @@ jobs:
         if: matrix.target != 'x86_64-apple-darwin'
         run: cargo install cross --git https://github.com/cross-rs/cross
 
+      - name: Install OpenSSL (macOS only)
+        if: matrix.target == 'x86_64-apple-darwin'
+        run: |
+          brew install openssl
+          export OPENSSL_DIR="$(brew --prefix openssl)"
+          echo "OPENSSL_DIR=${OPENSSL_DIR}" >> $GITHUB_ENV
+
       - name: Build binary
+        env:
+          OPENSSL_DIR: ${{ env.OPENSSL_DIR }} # Set for macOS to locate OpenSSL
         run: |
           if [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
             cargo build --release --target ${{ matrix.target }};
           else
             cross build --release --target ${{ matrix.target }};
-          fi
 
       - name: Rename binary for Windows
         if: matrix.target == 'x86_64-pc-windows-gnu'
