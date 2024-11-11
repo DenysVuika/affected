@@ -1,12 +1,14 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use serde_with::skip_serializing_none;
 use std::fs::File;
 use std::io::{BufReader, Write};
 use std::path::PathBuf;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[skip_serializing_none]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
-    pub base: String,
+    pub base: Option<String>,
 }
 
 impl Config {

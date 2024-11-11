@@ -13,7 +13,7 @@ use log::debug;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub fn list_affected_files(repo: &Repository, base: Option<String>) -> Result<Vec<String>> {
+pub fn list_affected_files(repo: &Repository, config: &Config) -> Result<Vec<String>> {
     // Get the current branch (HEAD)
     let head = repo.head().context("Could not retrieve HEAD")?;
     let current_branch = head
@@ -25,16 +25,18 @@ pub fn list_affected_files(repo: &Repository, base: Option<String>) -> Result<Ve
     let current_oid = head.target().context("Could not get current branch OID")?;
     debug!("Current OID: {}", current_oid);
 
+    let base: Option<&str> = config.base.as_deref();
+
     let base_branch = if let Some(main) = base {
-        if repo.find_branch(&main, BranchType::Local).is_ok() {
+        if repo.find_branch(main, BranchType::Local).is_ok() {
             main
         } else {
             bail!("Could not find the specified base branch '{}'", main);
         }
     } else if repo.find_branch("main", BranchType::Local).is_ok() {
-        "main".to_string()
+        "main"
     } else if repo.find_branch("master", BranchType::Local).is_ok() {
-        "master".to_string()
+        "master"
     } else {
         bail!("Could not find 'main' or 'master' branch");
     };
@@ -83,13 +85,13 @@ fn is_project_dir(path: &Path) -> bool {
 pub fn list_affected_projects(
     workspace_root: &PathBuf,
     repo: &Repository,
-    main: Option<String>,
+    config: &Config,
 ) -> Result<Vec<String>> {
     let projects = parse_workspace(workspace_root, is_project_dir)?;
     let mut affected_projects = HashSet::new();
 
     if !projects.is_empty() {
-        let affected_files: HashSet<_> = list_affected_files(repo, main)?.into_iter().collect();
+        let affected_files: HashSet<_> = list_affected_files(repo, config)?.into_iter().collect();
         // Check if any of the affected files are in the projects
         for project in projects {
             if affected_files.iter().any(|file| file.starts_with(&project)) {
@@ -106,7 +108,7 @@ pub fn list_affected_projects(
 pub fn list_all_projects(
     workspace_root: &PathBuf,
     _repo: &Repository,
-    _main: Option<String>,
+    _config: &Config,
 ) -> Result<()> {
     let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
     let projects = parse_workspace(workspace_root, filter_fn)?;

@@ -51,6 +51,15 @@ affected init
 affected --base=develop init
 ```
 
+This command creates a `.affected.yml` file in the root of the repository.
+
+### Configuration
+
+```yaml
+# .affected.yml
+base: main
+```
+
 ## Log Levels
 
 The log level can be set using the `LOG_LEVEL` environment variable.
