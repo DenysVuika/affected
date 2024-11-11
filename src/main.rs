@@ -1,13 +1,11 @@
+use affected::logger::init_logger;
 use affected::{
     get_project, list_affected_files, list_affected_projects, list_all_projects, Config,
 };
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
-use env_logger::{Builder, Env};
 use git2::Repository;
 use log::debug;
-use std::default::Default;
-use std::io::Write;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -50,21 +48,7 @@ enum ProjectsCommands {
 }
 
 fn main() -> Result<()> {
-    let env = Env::default()
-        .filter_or("LOG_LEVEL", "error")
-        .write_style_or("LOG_STYLE", "always");
-
-    // env_logger::init_from_env(env);
-
-    Builder::from_env(env)
-        .format(|buf, record| {
-            let level = record.level();
-            let info_style = buf.default_level_style(record.level());
-            // let timestamp = buf.timestamp();
-            // writeln!(buf, "{level}: {info_style}{}{info_style:#}", record.args())
-            writeln!(buf, "{info_style}{level}: {info_style:#}{}", record.args())
-        })
-        .init();
+    init_logger();
 
     let cli = Cli::parse();
 

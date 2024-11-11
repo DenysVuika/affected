@@ -1,4 +1,5 @@
 mod config;
+pub mod logger;
 mod node;
 pub mod nx;
 mod project;
@@ -120,7 +121,7 @@ pub fn list_all_projects(
 }
 
 pub fn get_project(workspace_root: &Path, project_path: &str) -> Result<Box<dyn Project>> {
-    let project_root = workspace_root.join(&project_path);
+    let project_root = workspace_root.join(project_path);
     let project_json_path = project_root.join("project.json");
     let package_json_path = project_root.join("package.json");
 
