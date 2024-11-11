@@ -161,4 +161,7 @@ sudo ln -s $(pwd)/target/debug/affected /usr/local/bin/affected
 # Run the application
 cd /path/to/repo
 affected view files
+
+# Full debug output
+LOG_LEVEL=DEBUG affected run lint
 ```
