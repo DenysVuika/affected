@@ -1,6 +1,6 @@
 use affected::logger::init_logger;
 use affected::{
-    get_project, list_affected_files, list_affected_projects, list_all_projects, Config,
+    get_project, list_affected_files, list_affected_projects, run_task_by_name, Config,
 };
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
@@ -27,24 +27,26 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Initialize the configuration file
     Init,
 
+    /// View affected files or projects
     #[command(subcommand)]
-    Files(FilesCommands),
+    View(ViewCommands),
 
-    #[command(subcommand)]
-    Projects(ProjectsCommands),
+    /// Run a specific task
+    #[command(arg_required_else_help = true)]
+    Run {
+        /// The task to run
+        task: String,
+    },
 }
 
 #[derive(Subcommand)]
-enum FilesCommands {
-    List,
-}
-
-#[derive(Subcommand)]
-enum ProjectsCommands {
-    All,
-    List,
+enum ViewCommands {
+    Files,
+    Projects,
+    Tasks,
 }
 
 fn main() -> Result<()> {
@@ -66,7 +68,8 @@ fn main() -> Result<()> {
     } else {
         debug!("Config file not found, using a default one");
         Config {
-            base: cli.base.clone().or_else(|| Some("main".to_string())),
+            base: cli.base.clone().or(Some("main".to_string())),
+            ..Default::default()
         }
     };
 
@@ -86,19 +89,15 @@ fn main() -> Result<()> {
             config.to_file(&config_path)?;
             println!("Config file created at {:?}", &config_path);
         }
-        Commands::Files(subcommand) => match subcommand {
-            FilesCommands::List => {
+
+        Commands::View(subcommand) => match subcommand {
+            ViewCommands::Files => {
                 let files = list_affected_files(&repo, &config)?;
                 for file in files {
                     println!("{}", file);
                 }
             }
-        },
-        Commands::Projects(subcommand) => match subcommand {
-            ProjectsCommands::All => {
-                list_all_projects(&workspace_root, &repo, &config)?;
-            }
-            ProjectsCommands::List => {
+            ViewCommands::Projects => {
                 let project_paths = list_affected_projects(&workspace_root, &repo, &config)?;
                 for project_path in project_paths {
                     let project = get_project(&workspace_root, &project_path)?;
@@ -109,7 +108,20 @@ fn main() -> Result<()> {
                     println!("{}", name);
                 }
             }
+            ViewCommands::Tasks => {
+                if let Some(tasks) = &config.tasks {
+                    for task in tasks {
+                        println!("{}", task);
+                    }
+                } else {
+                    println!("No tasks defined");
+                }
+            }
         },
+        Commands::Run { task } => {
+            run_task_by_name(&workspace_root, &repo, &config, task)?;
+            println!("Done");
+        }
     }
 
     Ok(())

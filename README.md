@@ -1,6 +1,6 @@
 # affected
 
-A tool to find affected files or projects in a git repository.
+A tool to find affected files or projects in a git repository and run commands on them.
 
 ## Installation
 
@@ -41,10 +41,9 @@ The format of the command is:
 Usage: affected [OPTIONS] <COMMAND>
 
 Commands:
-  init      
-  files     
-  projects  
-  help      Print this message or the help of the given subcommand(s)
+  init  Initialize the configuration file
+  view  View affected files or projects
+  help  Print this message or the help of the given subcommand(s)
 
 Options:
       --repo <REPO>  Optional repo path, defaults to current directory
@@ -58,10 +57,56 @@ For the feature branch checked out, and the main branch is `develop`:
 
 ```bash
 # List all affected files in the current repository
-affected --base=develop files list
+affected --base=develop view files
 
-# List all affected files in a different repository
-affected --repo=/path/to/repo --base=develop files list
+# List all affected projects in a different repository
+affected --repo=/path/to/repo --base=develop view projects
+```
+
+## Tasks
+
+Tasks can be defined in the `.affected.yml` file to run commands on affected files.
+
+```yaml
+base: develop
+
+tasks:
+  - name: lint
+    description: Runs eslint for all affected files
+    patterns: [ '*.ts', '*.tsx', '*.js', '*.jsx' ]
+    commands: [ 'echo {files}' ]
+
+    # Running eslint for affected files
+    # commands: [ 'npx eslint {files}' ]
+```
+
+The `name` field is the name of the task.  
+The pattern field is an array of file patterns to match.  
+The `commands` field is an array of commands to run on the affected files.  
+The `{files}` placeholder is replaced with the list of affected files.
+
+Alternative formatting:
+
+```yaml
+base: main
+tasks:
+  - name: lint
+    description: Runs eslint for all affected files
+    patterns:
+      - '*.ts'
+      - '*.tsx'
+      - '*.js'
+      - '*.jsx'
+    commands:
+      - echo {files}
+      - npx eslint {files}
+```
+
+### Example
+
+```bash
+# Run the 'lint' task
+affected run lint
 ```
 
 ## Log Levels
