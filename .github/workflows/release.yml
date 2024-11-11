@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         target: [ x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu, x86_64-apple-darwin ]
-        runner: [ ubuntu-latest, macos-latest, ubuntu-latest ]
+        runner: [ ubuntu-latest, ubuntu-latest, macos-latest ]
 
     runs-on: ${{ matrix.runner }}
 
@@ -33,8 +33,32 @@ jobs:
             cross build --release --target ${{ matrix.target }};
           fi
 
+      - name: Rename binary for Windows
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: mv target/${{ matrix.target }}/release/affected target/${{ matrix.target }}/release/affected.exe
+
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/affected
+          path: |
+            target/${{ matrix.target }}/release/affected*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.target }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/x86_64-unknown-linux-gnu/release/affected
+            target/x86_64-pc-windows-gnu/release/affected.exe
+            target/x86_64-apple-darwin/release/affected
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
