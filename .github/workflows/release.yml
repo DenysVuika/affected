@@ -7,45 +7,34 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-          - x86_64-pc-windows-gnu
-          - x86_64-apple-darwin
+        target: [ x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu, x86_64-apple-darwin ]
+        runner: [ ubuntu-latest, macos-latest, ubuntu-latest ]
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install cross
+      - name: Install Rust
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install cross (Linux/Windows only)
+        if: matrix.target != 'x86_64-apple-darwin'
         run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build binary
-        run: cross build --release --target ${{ matrix.target }}
+        run: |
+          if [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
+            cargo build --release --target ${{ matrix.target }};
+          else
+            cross build --release --target ${{ matrix.target }};
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/affected
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ matrix.target }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            target/x86_64-unknown-linux-gnu/release/affected
-            target/x86_64-pc-windows-gnu/release/affected.exe
-            target/x86_64-apple-darwin/release/affected
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: target/${{ matrix.target }}/release/your_binary_name
