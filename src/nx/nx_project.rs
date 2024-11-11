@@ -35,9 +35,15 @@ impl Project for NxProject {
         self.name.as_deref()
     }
 
-    fn load(path: &Path) -> Result<Self> {
+    fn load(workspace_root: &Path, project_path: &str) -> Result<Self> {
+        let path = workspace_root.join(project_path).join("project.json");
         let contents = fs::read_to_string(path)?;
-        let project: NxProject = serde_json::from_str(&contents)?;
+        let mut project: NxProject = serde_json::from_str(&contents)?;
+
+        if project.root.is_none() {
+            project.root = Some(project_path.to_string());
+        }
+
         Ok(project)
     }
 }
