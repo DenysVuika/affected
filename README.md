@@ -10,6 +10,29 @@ A tool to find affected files or projects in a git repository.
 cargo install affected
 ```
 
+## Setup
+
+The `init` command initializes the repository for use with the `affected` tool.
+
+```bash
+cd /path/to/repo
+
+# with the default base branch
+affected init
+
+# or with a different base branch
+affected --base=develop init
+```
+
+This command creates a `.affected.yml` file in the root of the repository.
+
+### Configuration
+
+```yaml
+# .affected.yml
+base: main
+```
+
 ## Usage
 
 The format of the command is:
@@ -39,25 +62,6 @@ affected --base=develop files list
 
 # List all affected files in a different repository
 affected --repo=/path/to/repo --base=develop files list
-```
-
-## Init
-
-The `init` command initializes the repository for use with the `affected` tool.
-
-```bash
-affected init
-# or
-affected --base=develop init
-```
-
-This command creates a `.affected.yml` file in the root of the repository.
-
-### Configuration
-
-```yaml
-# .affected.yml
-base: main
 ```
 
 ## Log Levels
