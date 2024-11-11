@@ -33,7 +33,7 @@ jobs:
       - name: Install Homebrew (macOS only)
         if: matrix.target == 'x86_64-apple-darwin'
         run: |
-          /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           brew update
           brew doctor
 
@@ -41,8 +41,7 @@ jobs:
         if: matrix.target == 'x86_64-apple-darwin'
         run: |
           brew install openssl
-          export OPENSSL_DIR="$(brew --prefix openssl)"
-          echo "OPENSSL_DIR=${OPENSSL_DIR}" >> $GITHUB_ENV
+          echo "OPENSSL_DIR=$(brew --prefix openssl)" >> $GITHUB_ENV
 
       - name: Build binary
         env:
