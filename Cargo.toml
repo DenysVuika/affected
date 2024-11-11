@@ -1,7 +1,7 @@
 [package]
 name = "affected"
 authors = ["Denys Vuika <denys.vuika@gmail.com>"]
-description = "A tool to find affected files or projects in a git repository"
+description = "A tool to find affected files or projects in a git repository and run commands on them."
 repository = "https://github.com/DenysVuika/affected.git"
 license = "Apache-2.0"
 version = "0.1.2"

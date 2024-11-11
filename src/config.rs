@@ -9,6 +9,13 @@ use std::path::PathBuf;
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
     pub base: Option<String>,
+    pub tasks: Option<Vec<Task>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Task {
+    pub name: String,
+    pub description: Option<String>,
 }
 
 impl Config {

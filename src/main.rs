@@ -27,24 +27,18 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Initialize the configuration file
     Init,
 
+    /// View affected files or projects
     #[command(subcommand)]
-    Files(FilesCommands),
-
-    #[command(subcommand)]
-    Projects(ProjectsCommands),
+    View(ViewCommands),
 }
 
 #[derive(Subcommand)]
-enum FilesCommands {
-    List,
-}
-
-#[derive(Subcommand)]
-enum ProjectsCommands {
-    All,
-    List,
+enum ViewCommands {
+    Files,
+    Projects,
 }
 
 fn main() -> Result<()> {
@@ -67,6 +61,7 @@ fn main() -> Result<()> {
         debug!("Config file not found, using a default one");
         Config {
             base: cli.base.clone().or_else(|| Some("main".to_string())),
+            tasks: None,
         }
     };
 
@@ -86,19 +81,15 @@ fn main() -> Result<()> {
             config.to_file(&config_path)?;
             println!("Config file created at {:?}", &config_path);
         }
-        Commands::Files(subcommand) => match subcommand {
-            FilesCommands::List => {
+
+        Commands::View(subcommand) => match subcommand {
+            ViewCommands::Files => {
                 let files = list_affected_files(&repo, &config)?;
                 for file in files {
                     println!("{}", file);
                 }
             }
-        },
-        Commands::Projects(subcommand) => match subcommand {
-            ProjectsCommands::All => {
-                list_all_projects(&workspace_root, &repo, &config)?;
-            }
-            ProjectsCommands::List => {
+            ViewCommands::Projects => {
                 let project_paths = list_affected_projects(&workspace_root, &repo, &config)?;
                 for project_path in project_paths {
                     let project = get_project(&workspace_root, &project_path)?;

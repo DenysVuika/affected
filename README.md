@@ -1,6 +1,6 @@
 # affected
 
-A tool to find affected files or projects in a git repository.
+A tool to find affected files or projects in a git repository and run commands on them.
 
 ## Installation
 
@@ -41,10 +41,9 @@ The format of the command is:
 Usage: affected [OPTIONS] <COMMAND>
 
 Commands:
-  init      
-  files     
-  projects  
-  help      Print this message or the help of the given subcommand(s)
+  init  Initialize the configuration file
+  view  View affected files or projects
+  help  Print this message or the help of the given subcommand(s)
 
 Options:
       --repo <REPO>  Optional repo path, defaults to current directory
@@ -58,10 +57,10 @@ For the feature branch checked out, and the main branch is `develop`:
 
 ```bash
 # List all affected files in the current repository
-affected --base=develop files list
+affected --base=develop view files
 
-# List all affected files in a different repository
-affected --repo=/path/to/repo --base=develop files list
+# List all affected projects in a different repository
+affected --repo=/path/to/repo --base=develop view projects
 ```
 
 ## Log Levels
