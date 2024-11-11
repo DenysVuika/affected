@@ -1,3 +1,4 @@
+mod config;
 mod node;
 pub mod nx;
 mod project;
@@ -6,6 +7,7 @@ mod utils;
 use crate::project::Project;
 use crate::utils::parse_workspace;
 use anyhow::{bail, Context, Result};
+pub use config::Config;
 use git2::{BranchType, DiffOptions, Repository};
 use log::debug;
 use std::collections::HashSet;

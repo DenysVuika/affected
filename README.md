@@ -18,6 +18,7 @@ The format of the command is:
 Usage: affected [OPTIONS] <COMMAND>
 
 Commands:
+  init      
   files     
   projects  
   help      Print this message or the help of the given subcommand(s)
@@ -38,6 +39,16 @@ affected --base=develop files list
 
 # List all affected files in a different repository
 affected --repo=/path/to/repo --base=develop files list
+```
+
+## Init
+
+The `init` command initializes the repository for use with the `affected` tool.
+
+```bash
+affected init
+# or
+affected --base=develop init
 ```
 
 ## Log Levels

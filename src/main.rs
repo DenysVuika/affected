@@ -1,4 +1,6 @@
-use affected::{get_project, list_affected_files, list_affected_projects, list_all_projects};
+use affected::{
+    get_project, list_affected_files, list_affected_projects, list_all_projects, Config,
+};
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
@@ -26,6 +28,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    Init,
+
     #[command(subcommand)]
     Files(FilesCommands),
 
@@ -46,7 +50,7 @@ enum ProjectsCommands {
 
 fn main() -> Result<()> {
     let env = Env::default()
-        .filter_or("LOG_LEVEL", "info")
+        .filter_or("LOG_LEVEL", "error")
         .write_style_or("LOG_STYLE", "always");
 
     // env_logger::init_from_env(env);
@@ -68,6 +72,13 @@ fn main() -> Result<()> {
         .unwrap_or_else(|| std::env::current_dir().expect("Failed to get the repository path"));
     debug!("Using repository: {:?}", &workspace_root);
 
+    let config_path = workspace_root.join("affected.yml");
+    if config_path.exists() {
+        let config = Config::from_file(&config_path)?;
+        debug!("Using config file: {:?}", &config_path);
+        println!("{:?}", config);
+    }
+
     let repo = Repository::open(&workspace_root).expect("Could not open the repository");
 
     // TODO: introduce flag to fetch from remote
@@ -80,6 +91,14 @@ fn main() -> Result<()> {
     //     .context("Failed to fetch from remote repository")?;
 
     match &cli.command {
+        Commands::Init => {
+            // let config = Config::from_env();
+            let config = Config {
+                base: cli.base.clone().unwrap_or_else(|| "main".to_string()),
+            };
+            config.to_file(&config_path)?;
+            println!("Config file created at {:?}", &config_path);
+        }
         Commands::Files(subcommand) => match subcommand {
             FilesCommands::List => {
                 let files = list_affected_files(&repo, cli.base)?;
