@@ -24,8 +24,8 @@ pub fn get_affected_files(repo: &Repository, config: &Config) -> Result<Vec<Stri
     debug!("Current branch: {}", current_branch);
 
     // Get the OIDs (object IDs) for the current branch and the main branch
-    let current_oid = head.target().context("Could not get current branch OID")?;
-    debug!("Current OID: {}", current_oid);
+    // let current_oid = head.target().context("Could not get current branch OID")?;
+    // debug!("Current OID: {}", current_oid);
 
     let base: Option<&str> = config.base.as_deref();
 
@@ -55,17 +55,17 @@ pub fn get_affected_files(repo: &Repository, config: &Config) -> Result<Vec<Stri
     debug!("Base OID: {}", main_oid);
 
     // Get the trees for each branch's commit
-    let current_tree = repo.find_commit(current_oid)?.tree()?;
+    // let current_tree = repo.find_commit(current_oid)?.tree()?;
     let base_tree = repo.find_commit(main_oid)?.tree()?;
 
     // Compare the trees to get the diff
     let mut diff_opts = DiffOptions::new();
-    let diff =
-        repo.diff_tree_to_tree(Some(&base_tree), Some(&current_tree), Some(&mut diff_opts))?;
+    // let diff =
+    //     repo.diff_tree_to_tree(Some(&base_tree), Some(&current_tree), Some(&mut diff_opts))?;
+    let diff = repo.diff_tree_to_workdir_with_index(Some(&base_tree), Some(&mut diff_opts))?;
 
     let mut result = vec![];
 
-    // Iterate over the diff entries and print the file paths
     for delta in diff.deltas() {
         if let Some(path) = delta.new_file().path() {
             result.push(path.to_string_lossy().to_string());
