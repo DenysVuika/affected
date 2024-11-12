@@ -3,6 +3,7 @@ pub mod logger;
 mod node;
 pub mod nx;
 mod project;
+pub mod tasks;
 mod utils;
 
 use crate::project::Project;
@@ -10,8 +11,7 @@ use crate::utils::parse_workspace;
 use anyhow::{bail, Context, Result};
 pub use config::Config;
 use git2::{BranchType, DiffOptions, Repository};
-use glob::Pattern;
-use log::{debug, error};
+use log::debug;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -137,72 +137,4 @@ pub fn get_project(workspace_root: &Path, project_path: &str) -> Result<Box<dyn 
     } else {
         bail!("Could not find 'project.json' or 'package.json' in the project directory");
     }
-}
-
-pub fn run_task_by_name(
-    workspace_root: &Path,
-    repo: &Repository,
-    config: &Config,
-    task_name: &str,
-) -> Result<()> {
-    debug!("Running task: {}", task_name);
-
-    let task = config.get_task(task_name).context("Task not found")?;
-    let file_paths = list_affected_files(repo, config)?;
-
-    // filter out files that exist on the filesystem
-    let file_paths: Vec<_> = file_paths
-        .into_iter()
-        .filter(|path| workspace_root.join(path).exists())
-        .collect();
-
-    if file_paths.is_empty() {
-        debug!("No files affected");
-        return Ok(());
-    }
-
-    let filtered_paths: Vec<_> = file_paths
-        .into_iter()
-        .filter(|path| {
-            task.patterns.iter().any(|pattern| {
-                Pattern::new(pattern)
-                    .map(|p| p.matches(path))
-                    .unwrap_or(false)
-            })
-        })
-        .collect();
-
-    if filtered_paths.is_empty() {
-        println!("No files matched the patterns");
-        return Ok(());
-    }
-
-    debug!("Filtered files:");
-    for path in &filtered_paths {
-        debug!("- {}", path);
-    }
-
-    let separator = task.separator.as_deref().unwrap_or(" ");
-    let files = &filtered_paths.join(separator);
-
-    for command_template in &task.commands {
-        let command_text = command_template.replace("{files}", files);
-        debug!("Running command: {}", &command_text);
-
-        let output = std::process::Command::new("sh")
-            .arg("-c")
-            .arg(&command_text)
-            .current_dir(workspace_root)
-            .output()
-            .context("Failed to run the command")?;
-
-        if !output.status.success() {
-            error!("{}", String::from_utf8_lossy(&output.stdout));
-            bail!("Command failed: {}", &command_text);
-        }
-
-        println!("{}", String::from_utf8_lossy(&output.stdout));
-    }
-
-    Ok(())
 }
