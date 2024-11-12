@@ -107,11 +107,7 @@ pub fn list_affected_projects(
     Ok(affected_projects.into_iter().collect())
 }
 
-pub fn list_all_projects(
-    workspace_root: &PathBuf,
-    _repo: &Repository,
-    _config: &Config,
-) -> Result<()> {
+pub fn list_all_projects(workspace_root: &PathBuf) -> Result<()> {
     let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
     let projects = parse_workspace(workspace_root, filter_fn)?;
 

@@ -3,6 +3,7 @@ use affected::tasks;
 use affected::{get_affected_files, get_project, list_affected_projects, Config};
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
+use dotenvy::dotenv;
 use git2::Repository;
 use log::debug;
 use std::path::PathBuf;
@@ -49,6 +50,9 @@ enum ViewCommands {
 }
 
 fn main() -> Result<()> {
+    // load environment variables from .env file
+    let _ = dotenv();
+
     init_logger();
 
     let cli = Cli::parse();
