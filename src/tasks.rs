@@ -1,4 +1,4 @@
-use crate::{list_affected_files, Config};
+use crate::{get_affected_files, Config};
 use anyhow::{bail, Context, Result};
 use git2::Repository;
 use glob::Pattern;
@@ -17,7 +17,7 @@ pub fn run_task_by_name(
     debug!("Running task: {}", task_name);
 
     let task = config.get_task(task_name).context("Task not found")?;
-    let file_paths = list_affected_files(repo, config)?;
+    let file_paths = get_affected_files(repo, config)?;
 
     // filter out files that exist on the filesystem
     let file_paths: Vec<_> = file_paths

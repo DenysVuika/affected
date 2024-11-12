@@ -1,6 +1,6 @@
 use affected::logger::init_logger;
 use affected::tasks;
-use affected::{get_project, list_affected_files, list_affected_projects, Config};
+use affected::{get_affected_files, get_project, list_affected_projects, Config};
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use git2::Repository;
@@ -91,7 +91,7 @@ fn main() -> Result<()> {
 
         Commands::View(subcommand) => match subcommand {
             ViewCommands::Files => {
-                let files = list_affected_files(&repo, &config)?;
+                let files = get_affected_files(&repo, &config)?;
                 for file in files {
                     println!("{}", file);
                 }

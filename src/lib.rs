@@ -15,7 +15,7 @@ use log::debug;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub fn list_affected_files(repo: &Repository, config: &Config) -> Result<Vec<String>> {
+pub fn get_affected_files(repo: &Repository, config: &Config) -> Result<Vec<String>> {
     // Get the current branch (HEAD)
     let head = repo.head().context("Could not retrieve HEAD")?;
     let current_branch = head
@@ -93,7 +93,7 @@ pub fn list_affected_projects(
     let mut affected_projects = HashSet::new();
 
     if !projects.is_empty() {
-        let affected_files: HashSet<_> = list_affected_files(repo, config)?.into_iter().collect();
+        let affected_files: HashSet<_> = get_affected_files(repo, config)?.into_iter().collect();
         // Check if any of the affected files are in the projects
         for project in projects {
             if affected_files.iter().any(|file| file.starts_with(&project)) {
