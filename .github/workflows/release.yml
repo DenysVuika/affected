@@ -103,9 +103,18 @@ jobs:
           name: ${{ matrix.target }}
           path: target/${{ matrix.target }}/release/
 
-      - name: Create GitHub Release
+      - name: Upload release asset for macOS/Linux
+        if: matrix.target != 'x86_64-pc-windows-gnu'
         uses: softprops/action-gh-release@v1
         with:
-          files: target/${{ matrix.target }}/release/**/*
+          files: target/${{ matrix.target }}/release/affected
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload release asset for Windows
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/${{ matrix.target }}/release/affected.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
