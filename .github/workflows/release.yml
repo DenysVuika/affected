@@ -107,6 +107,9 @@ jobs:
           name: ${{ matrix.target }}
           path: target/${{ matrix.target }}/release/
 
+      - name: List directory contents
+        run: ls -la target/${{ matrix.target }}/release/
+
       - name: Upload release asset for macOS/Linux
         if: matrix.target != 'x86_64-pc-windows-gnu'
         uses: softprops/action-gh-release@v1
