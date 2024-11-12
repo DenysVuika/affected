@@ -13,9 +13,21 @@ A tool to find affected files or projects in a git repository and run commands o
 
 ### From Crates.io
 
+This is the recommended way to install the tool.
+
 ```bash
 cargo install affected
 ```
+
+### From pre-built binaries
+
+Download the latest release from the [releases page](https://github.com/DenysVuika/affected/releases)
+
+Supported platforms:
+
+- Linux (x86_64)
+- Linux (aarch64)
+- macOS (x86_64)
 
 ## Setup
 
