@@ -1,9 +1,9 @@
 use affected::logger::init_logger;
-use affected::{
-    get_project, list_affected_files, list_affected_projects, run_task_by_name, Config,
-};
+use affected::tasks;
+use affected::{get_affected_files, get_project, list_affected_projects, Config};
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
+use dotenvy::dotenv;
 use git2::Repository;
 use log::debug;
 use std::path::PathBuf;
@@ -50,6 +50,9 @@ enum ViewCommands {
 }
 
 fn main() -> Result<()> {
+    // load environment variables from .env file
+    let _ = dotenv();
+
     init_logger();
 
     let cli = Cli::parse();
@@ -92,7 +95,7 @@ fn main() -> Result<()> {
 
         Commands::View(subcommand) => match subcommand {
             ViewCommands::Files => {
-                let files = list_affected_files(&repo, &config)?;
+                let files = get_affected_files(&repo, &config)?;
                 for file in files {
                     println!("{}", file);
                 }
@@ -119,7 +122,7 @@ fn main() -> Result<()> {
             }
         },
         Commands::Run { task } => {
-            run_task_by_name(&workspace_root, &repo, &config, task)?;
+            tasks::run_task_by_name(&workspace_root, &repo, &config, task)?;
             println!("Done");
         }
     }

@@ -2,6 +2,13 @@
 
 A tool to find affected files or projects in a git repository and run commands on them.
 
+## Features
+
+- determine affected files or projects for a git repository
+- view affected files or projects
+- run commands on affected files or projects
+- redirects variables from `.env` files to the commands
+
 ## Installation
 
 ### From Crates.io
@@ -104,14 +111,13 @@ tasks:
       - npx eslint {files}
 ```
 
-### Example
+Example:
 
 ```bash
-# Run the 'lint' task
 affected run lint
 ```
 
-## File Separators
+### File Separators
 
 The separator for the list of files can be set using the `separators` task field.
 This is useful when the command requires a different separator than the default.
@@ -128,6 +134,35 @@ tasks:
 ```
 
 The default separator is a space.
+
+### Environment Variables
+
+Environment variables can be set in the `.env` file in the root of the repository.
+
+```bash
+# .env
+NODE_ENV=development
+E2E_HOST="http://localhost"
+E2E_PORT=4200
+```
+
+The variables are passed to the commands.
+
+```yaml
+tasks:
+  - name: demo
+    description: Passes environment variables to the command
+    patterns: [ '*.ts', '*.tsx', '*.js', '*.jsx' ]
+    commands: [ 'echo ${E2E_HOST}:${E2E_PORT}' ]
+```
+
+Modify some source files and run the task:
+
+```bash
+affected run demo
+```
+
+The output is `http://localhost:4200`.
 
 ## Developing
 
