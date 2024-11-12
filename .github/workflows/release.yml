@@ -1,4 +1,4 @@
-name: Release
+name: Build and Release
 
 on:
   push:
@@ -9,33 +9,103 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-latest
+          #- target: x86_64-pc-windows-gnu
+          #  runner: ubuntu-latest
+          - target: x86_64-apple-darwin
+            runner: macos-latest
+
+    runs-on: ${{ matrix.runner }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - name: Install Rust
+        run: rustup target add ${{ matrix.target }}
 
-      - name: Build
-        run: cargo build --release
+      - name: Install cross (Linux/Windows only)
+        if: matrix.target != 'x86_64-apple-darwin'
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Install Homebrew (macOS only)
+        if: matrix.target == 'x86_64-apple-darwin'
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/runner/.bash_profile
+          eval "$(/opt/homebrew/bin/brew shellenv)"
+          brew update
+          brew doctor || true
+
+      - name: Install OpenSSL (macOS only)
+        if: matrix.target == 'x86_64-apple-darwin'
+        run: |
+          echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/runner/.bash_profile
+          eval "$(/opt/homebrew/bin/brew shellenv)"
+          brew untap homebrew/cask || true
+          brew untap homebrew/core || true
+          brew install openssl@3 || brew link --force openssl@3
+          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
+
+      - name: Install OpenSSL (Linux only)
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev libsasl2-dev
+          echo "OPENSSL_DIR=/usr/lib/ssl" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+
+      - name: Install Chocolatey (Windows only)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        shell: pwsh
+        run: |
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Install OpenSSL (Windows only)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: |
+          choco install openssl
+          echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $GITHUB_ENV
+
+      - name: Build binary
+        env:
+          OPENSSL_DIR: ${{ env.OPENSSL_DIR }} # Set for all platforms to locate OpenSSL
+        run: |
+          if [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
+            cargo build --release --target ${{ matrix.target }};
+          else
+            cross build --release --target ${{ matrix.target }};
+          fi
+
+      - name: Rename binary for Windows
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: mv target/${{ matrix.target }}/release/affected target/${{ matrix.target }}/release/affected.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: release
-          path: target/release/**/*
+          name: ${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/affected*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/
 
       - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/${{ matrix.target }}/release/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
