@@ -2,6 +2,12 @@
 
 A tool to find affected files or projects in a git repository and run commands on them.
 
+## Features
+
+- determine affected files or projects for a git repository
+- view affected files or projects
+- run commands on affected files or projects
+
 ## Installation
 
 ### From Crates.io
