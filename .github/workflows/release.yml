@@ -107,6 +107,10 @@ jobs:
           name: ${{ matrix.target }}
           path: target/${{ matrix.target }}/release/
 
+      - name: Make binary executable (Linux/macOS)
+        if: matrix.target != 'x86_64-pc-windows-gnu'
+        run: chmod +x target/${{ matrix.target }}/release/affected
+
       - name: Zip release artifact
         run: |
           if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
