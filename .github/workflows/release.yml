@@ -99,6 +99,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
