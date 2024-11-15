@@ -49,7 +49,8 @@ enum ViewCommands {
     Tasks,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     // load environment variables from .env file
     let _ = dotenv();
 
@@ -122,8 +123,10 @@ fn main() -> Result<()> {
             }
         },
         Commands::Run { task } => {
-            tasks::run_task_by_name(&workspace_root, &repo, &config, task)?;
-            println!("Done");
+            match tasks::run_task_by_name(&workspace_root, &repo, &config, task).await {
+                Ok(_) => println!("Done"),
+                Err(err) => log::error!("Failed to run task: {}", err),
+            }
         }
     }
 
