@@ -3,12 +3,12 @@ use anyhow::{bail, Context, Result};
 use git2::Repository;
 use glob::Pattern;
 use log::debug;
-use std::io;
-use std::io::BufRead;
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::process::Command;
 
-pub fn run_task_by_name(
+pub async fn run_task_by_name(
     workspace_root: &Path,
     repo: &Repository,
     config: &Config,
@@ -54,30 +54,46 @@ pub fn run_task_by_name(
     let separator = task.separator.as_deref().unwrap_or(" ");
     let files = &filtered_paths.join(separator);
 
+    let mut handles = Vec::new();
+
     for command_template in &task.commands {
         let command_text = command_template.replace("{files}", files);
         debug!("Running command: {}", &command_text);
 
-        let mut child = Command::new("sh")
-            .arg("-c")
-            .arg(&command_text)
-            .current_dir(workspace_root)
-            .stdout(Stdio::piped())
-            .spawn()
-            .context("Failed to start the command")?;
+        let workspace_root = workspace_root.to_path_buf();
+        let handle = tokio::spawn(async move {
+            let mut child = Command::new("sh")
+                .arg("-c")
+                .arg(&command_text)
+                .current_dir(&workspace_root)
+                .stdout(Stdio::piped())
+                .spawn()
+                .context("Failed to start the command")?;
 
-        if let Some(stdout) = child.stdout.take() {
-            let reader = io::BufReader::new(stdout);
-            for line in reader.lines() {
-                let line = line?;
-                println!("{}", line); // Print each line in real-time
+            if let Some(stdout) = child.stdout.take() {
+                let mut reader = BufReader::new(stdout).lines();
+                while let Some(line) = reader.next_line().await? {
+                    println!("{}", line);
+                }
             }
-        }
 
-        let status = child.wait().context("Failed to wait for the command")?;
-        if !status.success() {
-            bail!("Command failed: {}", &command_text);
-        }
+            let status = child
+                .wait()
+                .await
+                .context("Failed to wait for the command")?;
+            if !status.success() {
+                bail!("Command failed: {}", &command_text);
+            }
+
+            Ok::<(), anyhow::Error>(())
+        });
+
+        handles.push(handle);
+    }
+
+    // Await all tasks and fail fast if any command fails
+    for handle in handles {
+        handle.await.context("Task panicked")??;
     }
 
     Ok(())
