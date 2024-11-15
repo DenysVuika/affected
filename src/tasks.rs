@@ -60,20 +60,20 @@ pub async fn run_task_by_name(
         let command_text = command_template.replace("{files}", files);
         debug!("Running command: {}", &command_text);
 
-        let workspace_root = workspace_root.to_path_buf(); // Clone path to move into async task
+        let workspace_root = workspace_root.to_path_buf();
         let handle = tokio::spawn(async move {
             let mut child = Command::new("sh")
                 .arg("-c")
                 .arg(&command_text)
                 .current_dir(&workspace_root)
-                .stdout(Stdio::piped()) // Use std::process::Stdio
+                .stdout(Stdio::piped())
                 .spawn()
                 .context("Failed to start the command")?;
 
             if let Some(stdout) = child.stdout.take() {
                 let mut reader = BufReader::new(stdout).lines();
                 while let Some(line) = reader.next_line().await? {
-                    println!("{}", line); // Print each line in real-time
+                    println!("{}", line);
                 }
             }
 
