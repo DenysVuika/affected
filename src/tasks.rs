@@ -30,16 +30,20 @@ pub async fn run_task_by_name(
         return Ok(());
     }
 
-    let filtered_paths: Vec<_> = file_paths
-        .into_iter()
-        .filter(|path| {
-            task.patterns.iter().any(|pattern| {
-                Pattern::new(pattern)
-                    .map(|p| p.matches(path))
-                    .unwrap_or(false)
+    let filtered_paths: Vec<_> = if let Some(patterns) = &task.patterns {
+        file_paths
+            .into_iter()
+            .filter(|path| {
+                patterns.iter().any(|pattern| {
+                    Pattern::new(pattern)
+                        .map(|p| p.matches(path))
+                        .unwrap_or(false)
+                })
             })
-        })
-        .collect();
+            .collect()
+    } else {
+        file_paths
+    };
 
     if filtered_paths.is_empty() {
         println!("No files matched the patterns");

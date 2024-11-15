@@ -24,18 +24,32 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             base: Some("main".to_string()),
-            tasks: Some(vec![Task {
-                name: "lint".to_string(),
-                description: Some("Runs eslint for all affected files".to_string()),
-                patterns: vec![
-                    "*.ts".to_string(),
-                    "*.tsx".to_string(),
-                    "*.js".to_string(),
-                    "*.jsx".to_string(),
-                ],
-                commands: vec!["echo {files}".to_string()],
-                ..Default::default()
-            }]),
+            tasks: Some(vec![
+                Task {
+                    name: "lint".to_string(),
+                    description: Some("Runs eslint for all affected files (example)".to_string()),
+                    patterns: Some(vec![
+                        "*.ts".to_string(),
+                        "*.tsx".to_string(),
+                        "*.js".to_string(),
+                        "*.jsx".to_string(),
+                    ]),
+                    commands: vec!["eslint {files}".to_string()],
+                    ..Default::default()
+                },
+                Task {
+                    name: "prettier".to_string(),
+                    description: Some("Runs prettier for all affected files (example)".to_string()),
+                    patterns: Some(vec![
+                        "*.ts".to_string(),
+                        "*.tsx".to_string(),
+                        "*.js".to_string(),
+                        "*.jsx".to_string(),
+                    ]),
+                    commands: vec!["prettier --check {files}".to_string()],
+                    ..Default::default()
+                },
+            ]),
         }
     }
 }
@@ -45,7 +59,7 @@ impl Default for Config {
 pub struct Task {
     pub name: String,
     pub description: Option<String>,
-    pub patterns: Vec<String>,
+    pub patterns: Option<Vec<String>>,
     pub separator: Option<String>,
     pub commands: Vec<String>,
 }
