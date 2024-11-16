@@ -75,38 +75,31 @@ pub fn get_affected_files(repo: &Repository, config: &Config) -> Result<Vec<Stri
     Ok(result)
 }
 
-// TODO: provide a way to specify the display options: name as folder, package.json, project.json, etc.
 pub fn get_affected_projects(
     workspace_root: &PathBuf,
     repo: &Repository,
     config: &Config,
 ) -> Result<Vec<String>> {
-    let projects = inspect_workspace(workspace_root, is_project_dir)?;
-    let mut affected_projects = HashSet::new();
+    let affected_files: HashSet<_> = get_affected_files(repo, config)?.into_iter().collect();
+    if affected_files.is_empty() {
+        return Ok(vec![]);
+    }
 
-    if !projects.is_empty() {
-        let affected_files: HashSet<_> = get_affected_files(repo, config)?.into_iter().collect();
-        // Check if any of the affected files are in the projects
-        for project in projects {
-            if affected_files.iter().any(|file| file.starts_with(&project)) {
-                affected_projects.insert(project);
-            } else {
-                debug!("Skipping project '{}'", project);
-            }
+    let mut projects = inspect_workspace(workspace_root, is_project_dir)?;
+    if projects.is_empty() {
+        return Ok(vec![]);
+    }
+
+    projects.retain(|project| {
+        if affected_files.iter().any(|file| file.starts_with(project)) {
+            true
+        } else {
+            debug!("Skipping project '{}'", project);
+            false
         }
-    }
+    });
 
-    Ok(affected_projects.into_iter().collect())
-}
-
-pub fn list_all_projects(workspace_root: &PathBuf) -> Result<()> {
-    let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
-    let projects = inspect_workspace(workspace_root, filter_fn)?;
-
-    for project in projects {
-        println!("{}", project);
-    }
-    Ok(())
+    Ok(projects)
 }
 
 pub fn get_project(workspace_root: &Path, project_path: &str) -> Result<Box<dyn Project>> {
