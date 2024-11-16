@@ -71,6 +71,7 @@ pub async fn run_task_by_name(
                 .arg(&command_text)
                 .current_dir(&workspace_root)
                 .stdout(Stdio::piped())
+                .env("FORCE_COLOR", "1")
                 .spawn()
                 .context("Failed to start the command")?;
 
