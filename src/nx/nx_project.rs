@@ -1,4 +1,4 @@
-use crate::project::Project;
+use crate::projects::Project;
 use anyhow::Result;
 use serde::Deserialize;
 use std::fs;
