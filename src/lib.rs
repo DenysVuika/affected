@@ -76,7 +76,7 @@ pub fn get_affected_files(repo: &Repository, config: &Config) -> Result<Vec<Stri
 }
 
 // TODO: provide a way to specify the display options: name as folder, package.json, project.json, etc.
-pub fn list_affected_projects(
+pub fn get_affected_projects(
     workspace_root: &PathBuf,
     repo: &Repository,
     config: &Config,

@@ -1,6 +1,6 @@
 use affected::logger::init_logger;
 use affected::tasks;
-use affected::{get_affected_files, get_project, list_affected_projects, Config};
+use affected::{get_affected_files, get_affected_projects, get_project, Config};
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
@@ -102,7 +102,7 @@ async fn main() -> Result<()> {
                 }
             }
             ViewCommands::Projects => {
-                let project_paths = list_affected_projects(&workspace_root, &repo, &config)?;
+                let project_paths = get_affected_projects(&workspace_root, &repo, &config)?;
                 for project_path in project_paths {
                     let project = get_project(&workspace_root, &project_path)?;
                     let name = match project.name() {
