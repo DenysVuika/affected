@@ -1,7 +1,7 @@
 use affected::logger::init_logger;
 use affected::tasks;
-use affected::{get_affected_files, get_affected_projects, get_project, Config};
-use anyhow::{bail, Result};
+use affected::{get_affected_files, get_affected_projects, Config};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
 use git2::Repository;
@@ -103,12 +103,39 @@ async fn main() -> Result<()> {
             }
             ViewCommands::Projects => {
                 let project_paths = get_affected_projects(&workspace_root, &repo, &config)?;
+                if project_paths.is_empty() {
+                    println!("No projects affected");
+                    return Ok(());
+                }
+
                 let graph = affected::graph::build_graph(&workspace_root, &project_paths)?;
+
+                if graph.node_count() == 0 {
+                    println!("No projects affected");
+                    return Ok(());
+                }
+
+                let mut printed_nodes = std::collections::HashSet::new();
 
                 for node_index in graph.node_indices() {
                     let project_name = &graph[node_index];
-                    println!("{}", project_name);
+                    printed_nodes.insert(project_name);
+                    debug!("{}", project_name);
                 }
+
+                for edge in graph.edge_indices() {
+                    let (source, target) = graph.edge_endpoints(edge).unwrap();
+                    let source_name = &graph[source];
+                    let target_name = &graph[target];
+                    debug!("{} -> {}", source_name, target_name);
+                    printed_nodes.insert(target_name);
+                }
+
+                for node in printed_nodes {
+                    println!("{}", node);
+                }
+
+                // println!("{:?}", graph);
             }
             ViewCommands::Tasks => {
                 if let Some(tasks) = &config.tasks {
