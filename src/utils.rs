@@ -2,7 +2,7 @@ use anyhow::Result;
 use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
 
-pub fn parse_workspace<F>(workspace_root: &PathBuf, filter_fn: F) -> Result<Vec<String>>
+pub fn inspect_workspace<F>(workspace_root: &PathBuf, filter_fn: F) -> Result<Vec<String>>
 where
     F: Fn(&Path) -> bool,
 {

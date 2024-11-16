@@ -7,7 +7,7 @@ pub mod tasks;
 mod utils;
 
 use crate::projects::{is_project_dir, Project};
-use crate::utils::parse_workspace;
+use crate::utils::inspect_workspace;
 use anyhow::{bail, Context, Result};
 pub use config::Config;
 use git2::{BranchType, DiffOptions, Repository};
@@ -81,7 +81,7 @@ pub fn get_affected_projects(
     repo: &Repository,
     config: &Config,
 ) -> Result<Vec<String>> {
-    let projects = parse_workspace(workspace_root, is_project_dir)?;
+    let projects = inspect_workspace(workspace_root, is_project_dir)?;
     let mut affected_projects = HashSet::new();
 
     if !projects.is_empty() {
@@ -101,7 +101,7 @@ pub fn get_affected_projects(
 
 pub fn list_all_projects(workspace_root: &PathBuf) -> Result<()> {
     let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
-    let projects = parse_workspace(workspace_root, filter_fn)?;
+    let projects = inspect_workspace(workspace_root, filter_fn)?;
 
     for project in projects {
         println!("{}", project);
