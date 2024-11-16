@@ -105,9 +105,9 @@ base: develop
 tasks:
   - name: lint
     description: Runs eslint for all affected files
-    patterns: [ '*.ts', '*.tsx', '*.js', '*.jsx' ]
+    patterns: [ '*.{ts,tsx,js,jsx}' ]
     separator: ' ' # Optional separator for the files list
-    commands: [ 'echo {files}' ]
+    commands: [ 'npx eslint {files}' ]
 
     # Running eslint for affected files
     # commands: [ 'npx eslint {files}' ]
@@ -124,8 +124,8 @@ Alternative formatting:
 ```yaml
 base: main
 tasks:
-  - name: lint
-    description: Runs eslint for all affected files
+  - name: prettier
+    description: Runs prettier for all affected files
     patterns:
       - '*.ts'
       - '*.tsx'
@@ -133,7 +133,7 @@ tasks:
       - '*.jsx'
     commands:
       - echo {files}
-      - npx eslint {files}
+      - npx prettier --check {files}
 ```
 
 Example:
@@ -153,7 +153,7 @@ For example, the `karma` task requires a comma-separated list of files.
 tasks:
   - name: karma
     description: Runs karma for all affected files
-    patterns: [ '*.ts' ]
+    patterns: [ '*.spec.ts' ]
     separator: ',' # Comma-separated list
     commands: [ 'npx karma start --include {files}' ] 
 ```
@@ -177,7 +177,7 @@ The variables are passed to the commands.
 tasks:
   - name: demo
     description: Passes environment variables to the command
-    patterns: [ '*.ts', '*.tsx', '*.js', '*.jsx' ]
+    patterns: [ '*.{ts,tsx,js,jsx}' ]
     commands: [ 'echo ${E2E_HOST}:${E2E_PORT}' ]
 ```
 
