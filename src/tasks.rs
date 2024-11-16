@@ -5,7 +5,6 @@ use glob::Pattern;
 use log::debug;
 use std::path::Path;
 use std::process::Stdio;
-use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
 pub async fn run_task_by_name(
@@ -61,7 +60,8 @@ pub async fn run_task_by_name(
     let mut handles = Vec::new();
 
     for command_template in &task.commands {
-        let command_text = command_template.replace("{files}", files);
+        let template = command_template.clone();
+        let command_text = template.replace("{files}", files);
         debug!("Running command: {}", &command_text);
 
         let workspace_root = workspace_root.to_path_buf();
@@ -74,19 +74,17 @@ pub async fn run_task_by_name(
                 .spawn()
                 .context("Failed to start the command")?;
 
-            if let Some(stdout) = child.stdout.take() {
-                let mut reader = BufReader::new(stdout).lines();
-                while let Some(line) = reader.next_line().await? {
-                    println!("{}", line);
-                }
+            if let Some(mut stdout) = child.stdout.take() {
+                tokio::io::copy(&mut stdout, &mut tokio::io::stdout()).await?;
             }
 
             let status = child
                 .wait()
                 .await
                 .context("Failed to wait for the command")?;
+
             if !status.success() {
-                bail!("Command failed: {}", &command_text);
+                bail!("Command failed: {}", &template);
             }
 
             Ok::<(), anyhow::Error>(())

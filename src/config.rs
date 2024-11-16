@@ -34,7 +34,7 @@ impl Default for Config {
                         "*.js".to_string(),
                         "*.jsx".to_string(),
                     ]),
-                    commands: vec!["eslint {files}".to_string()],
+                    commands: vec!["npx eslint {files}".to_string()],
                     ..Default::default()
                 },
                 Task {
@@ -46,7 +46,7 @@ impl Default for Config {
                         "*.js".to_string(),
                         "*.jsx".to_string(),
                     ]),
-                    commands: vec!["prettier --check {files}".to_string()],
+                    commands: vec!["npx prettier --check {files}".to_string()],
                     ..Default::default()
                 },
             ]),
