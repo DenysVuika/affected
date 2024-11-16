@@ -1,4 +1,5 @@
 mod config;
+pub mod graph;
 pub mod logger;
 mod node;
 pub mod nx;
@@ -89,7 +90,6 @@ pub fn get_affected_projects(
     if projects.is_empty() {
         return Ok(vec![]);
     }
-
     projects.retain(|project| {
         if affected_files.iter().any(|file| file.starts_with(project)) {
             true

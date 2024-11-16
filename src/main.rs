@@ -103,13 +103,11 @@ async fn main() -> Result<()> {
             }
             ViewCommands::Projects => {
                 let project_paths = get_affected_projects(&workspace_root, &repo, &config)?;
-                for project_path in project_paths {
-                    let project = get_project(&workspace_root, &project_path)?;
-                    let name = match project.name() {
-                        Some(name) => name,
-                        None => bail!("Project name is not defined"),
-                    };
-                    println!("{}", name);
+                let graph = affected::graph::build_graph(&workspace_root, &project_paths)?;
+
+                for node_index in graph.node_indices() {
+                    let project_name = &graph[node_index];
+                    println!("{}", project_name);
                 }
             }
             ViewCommands::Tasks => {
