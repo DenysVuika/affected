@@ -2,11 +2,11 @@ mod config;
 pub mod logger;
 mod node;
 pub mod nx;
-mod project;
+mod projects;
 pub mod tasks;
 mod utils;
 
-use crate::project::Project;
+use crate::projects::{is_project_dir, Project};
 use crate::utils::parse_workspace;
 use anyhow::{bail, Context, Result};
 pub use config::Config;
@@ -73,14 +73,6 @@ pub fn get_affected_files(repo: &Repository, config: &Config) -> Result<Vec<Stri
     }
 
     Ok(result)
-}
-
-fn is_project_dir(path: &Path) -> bool {
-    path.is_dir()
-        && (
-            path.join("project.json").is_file() || path.join("package.json").is_file()
-            // || path.join("Cargo.toml").is_file()
-        )
 }
 
 // TODO: provide a way to specify the display options: name as folder, package.json, project.json, etc.

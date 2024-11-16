@@ -8,3 +8,11 @@ pub trait Project {
     where
         Self: Sized;
 }
+
+pub fn is_project_dir(path: &Path) -> bool {
+    path.is_dir()
+        && (
+            path.join("project.json").is_file() || path.join("package.json").is_file()
+            // || path.join("Cargo.toml").is_file()
+        )
+}
