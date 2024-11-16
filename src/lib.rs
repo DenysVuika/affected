@@ -6,6 +6,7 @@ pub mod nx;
 mod projects;
 pub mod tasks;
 mod utils;
+pub mod workspace;
 
 use crate::projects::{is_project_dir, Project};
 use crate::utils::inspect_workspace;

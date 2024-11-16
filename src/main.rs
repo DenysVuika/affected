@@ -1,11 +1,13 @@
 use affected::logger::init_logger;
 use affected::tasks;
+use affected::workspace::Workspace;
 use affected::{get_affected_files, get_affected_projects, Config};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
 use git2::Repository;
 use log::debug;
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -77,6 +79,7 @@ async fn main() -> Result<()> {
         }
     };
 
+    let workspace = Workspace::with_config(&workspace_root, config);
     let repo = Repository::open(&workspace_root).expect("Could not open the repository");
 
     // TODO: introduce flag to fetch from remote
@@ -90,19 +93,23 @@ async fn main() -> Result<()> {
 
     match &cli.command {
         Commands::Init => {
+            let config = workspace.config().expect("No configuration found");
             config.to_file(&config_path)?;
             println!("Config file created at {:?}", &config_path);
         }
 
         Commands::View(subcommand) => match subcommand {
             ViewCommands::Files => {
-                let files = get_affected_files(&repo, &config)?;
-                for file in files {
-                    println!("{}", file);
+                if let Some(config) = workspace.config() {
+                    let files = get_affected_files(&repo, config)?;
+                    for file in files {
+                        println!("{}", file);
+                    }
                 }
             }
             ViewCommands::Projects => {
-                let project_paths = get_affected_projects(&workspace_root, &repo, &config)?;
+                let config = workspace.config().expect("No configuration found");
+                let project_paths = get_affected_projects(&workspace_root, &repo, config)?;
                 if project_paths.is_empty() {
                     println!("No projects affected");
                     return Ok(());
@@ -115,7 +122,7 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
 
-                let mut printed_nodes = std::collections::HashSet::new();
+                let mut printed_nodes = HashSet::new();
 
                 for node_index in graph.node_indices() {
                     let project_name = &graph[node_index];
@@ -138,19 +145,25 @@ async fn main() -> Result<()> {
                 // println!("{:?}", graph);
             }
             ViewCommands::Tasks => {
-                if let Some(tasks) = &config.tasks {
-                    for task in tasks {
-                        println!("{}", task);
+                if let Some(config) = workspace.config() {
+                    if let Some(tasks) = &config.tasks {
+                        for task in tasks {
+                            println!("{}", task);
+                        }
+                    } else {
+                        println!("No tasks defined");
                     }
-                } else {
-                    println!("No tasks defined");
                 }
             }
         },
         Commands::Run { task } => {
-            match tasks::run_task_by_name(&workspace_root, &repo, &config, task).await {
-                Ok(_) => println!("Done"),
-                Err(err) => log::error!("Failed to run task: {}", err),
+            if let Some(config) = workspace.config() {
+                match tasks::run_task_by_name(&workspace_root, &repo, config, task).await {
+                    Ok(_) => println!("Done"),
+                    Err(err) => log::error!("Failed to run task: {}", err),
+                }
+            } else {
+                log::error!("No configuration found");
             }
         }
     }
