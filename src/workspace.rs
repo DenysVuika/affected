@@ -1,4 +1,5 @@
 use crate::Config;
+use anyhow::Result;
 use std::path::PathBuf;
 
 #[derive(Debug)]
@@ -24,5 +25,10 @@ impl Workspace {
 
     pub fn config(&self) -> Option<&Config> {
         self.config.as_ref()
+    }
+
+    pub async fn load(&self) -> Result<()> {
+        // Logic to load data
+        Ok(())
     }
 }

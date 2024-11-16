@@ -80,6 +80,8 @@ async fn main() -> Result<()> {
     };
 
     let workspace = Workspace::with_config(&workspace_root, config);
+    workspace.load().await?;
+
     let repo = Repository::open(&workspace_root).expect("Could not open the repository");
 
     // TODO: introduce flag to fetch from remote
