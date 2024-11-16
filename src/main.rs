@@ -127,7 +127,7 @@ async fn main() -> Result<()> {
                     let (source, target) = graph.edge_endpoints(edge).unwrap();
                     let source_name = &graph[source];
                     let target_name = &graph[target];
-                    debug!("{} -> {}", source_name, target_name);
+                    debug!("{} -> (implicit) -> {}", source_name, target_name);
                     printed_nodes.insert(target_name);
                 }
 
