@@ -7,7 +7,9 @@ A tool to find affected files or projects in a git repository and run commands o
 - determine affected files or projects for a git repository
 - view affected files or projects
 - run commands on affected files or projects
-- redirects variables from `.env` files to the commands
+    - support `.env` files for the commands
+- supports [Nx](https://nx.dev/) monorepos
+    - `implicitDependencies` via the `project.json` files
 
 ## Installation
 
@@ -27,7 +29,7 @@ Supported platforms:
 
 - Linux (x86_64)
 - Linux (aarch64)
-- macOS (x86_64)
+- macOS (x86_64, unsigned)
 
 ## Setup
 
@@ -69,6 +71,17 @@ Options:
       --base <BASE>  Base of the current branch (usually main). Falls back to 'main' or 'master' if not provided
   -h, --help         Print help
 ```
+
+### Commands
+
+- `init` - Initialize the configuration file
+- `view` - View affected files or projects
+    - `files` - List affected files
+    - `projects` - List affected projects
+    - `tasks` - List defined tasks
+- `run [task]` - Run a task on affected files or projects
+
+For more information on a command, use the `help` command.
 
 ### Example
 
