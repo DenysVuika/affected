@@ -28,24 +28,14 @@ impl Default for Config {
                 Task {
                     name: "lint".to_string(),
                     description: Some("Runs eslint for all affected files (example)".to_string()),
-                    patterns: Some(vec![
-                        "*.ts".to_string(),
-                        "*.tsx".to_string(),
-                        "*.js".to_string(),
-                        "*.jsx".to_string(),
-                    ]),
+                    patterns: Some(vec!["*.{ts,tsx,js,jsx}".to_string()]),
                     commands: vec!["npx eslint {files}".to_string()],
                     ..Default::default()
                 },
                 Task {
                     name: "prettier".to_string(),
                     description: Some("Runs prettier for all affected files (example)".to_string()),
-                    patterns: Some(vec![
-                        "*.ts".to_string(),
-                        "*.tsx".to_string(),
-                        "*.js".to_string(),
-                        "*.jsx".to_string(),
-                    ]),
+                    patterns: Some(vec!["*.{ts,tsx,js,jsx}".to_string()]),
                     commands: vec!["npx prettier --check {files}".to_string()],
                     ..Default::default()
                 },

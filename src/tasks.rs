@@ -1,7 +1,7 @@
 use crate::{get_affected_files, Config};
 use anyhow::{bail, Context, Result};
 use git2::Repository;
-use glob::Pattern;
+use globset::{Glob, GlobSetBuilder};
 use log::debug;
 use std::path::Path;
 use std::process::Stdio;
@@ -29,20 +29,22 @@ pub async fn run_task_by_name(
         return Ok(());
     }
 
-    let filtered_paths: Vec<_> = if let Some(patterns) = &task.patterns {
-        file_paths
-            .into_iter()
-            .filter(|path| {
-                patterns.iter().any(|pattern| {
-                    Pattern::new(pattern)
-                        .map(|p| p.matches(path))
-                        .unwrap_or(false)
-                })
-            })
-            .collect()
+    let mut builder = GlobSetBuilder::new();
+
+    if let Some(patterns) = &task.patterns {
+        for pattern in patterns {
+            builder.add(Glob::new(pattern)?);
+        }
     } else {
-        file_paths
-    };
+        builder.add(Glob::new("**/*")?);
+    }
+
+    let patterns = builder.build()?;
+
+    let filtered_paths: Vec<_> = file_paths
+        .into_iter()
+        .filter(|path| patterns.is_match(path))
+        .collect();
 
     if filtered_paths.is_empty() {
         println!("No files matched the patterns");

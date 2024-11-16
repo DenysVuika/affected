@@ -102,6 +102,13 @@ pub fn get_affected_projects(
     Ok(projects)
 }
 
+pub fn get_all_projects(workspace_root: &PathBuf) -> Result<Vec<String>> {
+    let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
+    let projects = inspect_workspace(workspace_root, filter_fn)?;
+
+    Ok(projects)
+}
+
 pub fn get_project(workspace_root: &Path, project_path: &str) -> Result<Box<dyn Project>> {
     let project_root = workspace_root.join(project_path);
     let project_json_path = project_root.join("project.json");
