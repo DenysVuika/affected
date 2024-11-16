@@ -155,7 +155,7 @@ tasks:
     description: Runs karma for all affected files
     patterns: [ '*.ts' ]
     separator: ',' # Comma-separated list
-    commands: [ 'karma start --include {files}' ] 
+    commands: [ 'npx karma start --include {files}' ] 
 ```
 
 The default separator is a space.
