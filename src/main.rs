@@ -1,7 +1,7 @@
 use affected::logger::init_logger;
 use affected::tasks;
 use affected::workspace::Workspace;
-use affected::{get_affected_files, get_affected_projects, Config};
+use affected::{get_affected_projects, Config};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
@@ -79,16 +79,6 @@ async fn main() -> Result<()> {
     };
 
     let mut workspace = Workspace::with_config(&workspace_root, config);
-    // let repo = Repository::open(&workspace_root).expect("Could not open the repository");
-
-    // TODO: introduce flag to fetch from remote
-    // Fetch the latest changes from the remote repository
-    // let mut remote = repo
-    //     .find_remote("origin")
-    //     .context("Could not find remote 'origin'")?;
-    // remote
-    //     .fetch(&["refs/heads/*:refs/remotes/origin/*"], None, None)
-    //     .context("Failed to fetch from remote repository")?;
 
     match &cli.command {
         Commands::Init => {
@@ -100,10 +90,8 @@ async fn main() -> Result<()> {
         Commands::View(subcommand) => match subcommand {
             ViewCommands::Files => {
                 workspace.load().await?;
-                let repo = workspace.repo().expect("No repository found");
-                let config = workspace.config().expect("No configuration found");
 
-                let files = get_affected_files(repo, config)?;
+                let files = workspace.affected_files()?;
                 for file in files {
                     println!("{}", file);
                 }

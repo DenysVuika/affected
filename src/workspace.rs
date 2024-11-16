@@ -8,6 +8,8 @@ pub struct Workspace {
 
     config: Option<Config>,
     repo: Option<Repository>,
+
+    cached_affected_files: Option<Vec<String>>,
 }
 
 impl Workspace {
@@ -16,6 +18,7 @@ impl Workspace {
             root: root.into(),
             config: None,
             repo: None,
+            cached_affected_files: None,
         }
     }
 
@@ -24,6 +27,7 @@ impl Workspace {
             root: root.into(),
             config: Some(config),
             repo: None,
+            cached_affected_files: None,
         }
     }
 
@@ -37,8 +41,32 @@ impl Workspace {
 
     pub async fn load(&mut self) -> Result<()> {
         let repo = Repository::open(&self.root).expect("Could not open the repository");
+
+        // TODO: introduce flag to fetch from remote
+        // Fetch the latest changes from the remote repository
+        // let mut remote = repo
+        //     .find_remote("origin")
+        //     .context("Could not find remote 'origin'")?;
+        // remote
+        //     .fetch(&["refs/heads/*:refs/remotes/origin/*"], None, None)
+        //     .context("Failed to fetch from remote repository")?;
+
         self.repo = Some(repo);
 
         Ok(())
+    }
+
+    pub fn affected_files(&mut self) -> Result<Vec<String>> {
+        if let Some(ref cached_files) = self.cached_affected_files {
+            return Ok(cached_files.clone());
+        }
+
+        let repo = self.repo.as_ref().expect("Repository not loaded");
+        let config = self.config.as_ref().expect("Configuration not loaded");
+
+        let affected_files = crate::get_affected_files(repo, config)?;
+        self.cached_affected_files = Some(affected_files.clone());
+
+        Ok(affected_files)
     }
 }
