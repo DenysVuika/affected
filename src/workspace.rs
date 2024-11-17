@@ -10,6 +10,7 @@ pub struct Workspace {
     repo: Option<Repository>,
 
     cached_affected_files: Option<Vec<String>>,
+    cached_affected_projects: Option<Vec<String>>,
 }
 
 impl Workspace {
@@ -19,6 +20,7 @@ impl Workspace {
             config: None,
             repo: None,
             cached_affected_files: None,
+            cached_affected_projects: None,
         }
     }
 
@@ -28,6 +30,7 @@ impl Workspace {
             config: Some(config),
             repo: None,
             cached_affected_files: None,
+            cached_affected_projects: None,
         }
     }
 
@@ -68,5 +71,19 @@ impl Workspace {
         self.cached_affected_files = Some(affected_files.clone());
 
         Ok(affected_files)
+    }
+
+    pub fn affected_projects(&mut self) -> Result<Vec<String>> {
+        if let Some(ref cached_projects) = self.cached_affected_projects {
+            return Ok(cached_projects.clone());
+        }
+
+        let repo = self.repo.as_ref().expect("Repository not loaded");
+        let config = self.config.as_ref().expect("Configuration not loaded");
+
+        let affected_projects = crate::get_affected_projects(&self.root, repo, config)?;
+        self.cached_affected_projects = Some(affected_projects.clone());
+
+        Ok(affected_projects)
     }
 }

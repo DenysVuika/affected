@@ -1,7 +1,7 @@
 use affected::logger::init_logger;
 use affected::tasks;
 use affected::workspace::Workspace;
-use affected::{get_affected_projects, Config};
+use affected::Config;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
@@ -98,9 +98,7 @@ async fn main() -> Result<()> {
             }
             ViewCommands::Projects => {
                 workspace.load().await?;
-                let repo = workspace.repo().expect("No repository found");
-                let config = workspace.config().expect("No configuration found");
-                let project_paths = get_affected_projects(&workspace_root, repo, config)?;
+                let project_paths = workspace.affected_projects()?;
                 if project_paths.is_empty() {
                     println!("No projects affected");
                     return Ok(());
