@@ -148,13 +148,6 @@ pub fn get_affected_files(repo: &Repository, config: &Config) -> Result<Vec<Stri
     Ok(result)
 }
 
-fn get_all_projects(workspace_root: &PathBuf) -> Result<Vec<String>> {
-    let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
-    let projects = inspect_workspace(workspace_root, filter_fn)?;
-
-    Ok(projects)
-}
-
 fn get_affected_projects(
     workspace_root: &PathBuf,
     repo: &Repository,
