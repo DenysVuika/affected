@@ -1,14 +1,17 @@
 use crate::nx::NxProject;
 use crate::projects::Project;
+use crate::workspace::Workspace;
 use anyhow::Result;
 use petgraph::Graph;
-use std::path::Path;
 
-pub fn build_graph(workspace_root: &Path, project_paths: &[String]) -> Result<Graph<String, ()>> {
+pub fn build_graph(
+    workspace: &Workspace,
+    affected_projects: &[String],
+) -> Result<Graph<String, ()>> {
     let mut graph = Graph::new();
-    let projects: Vec<NxProject> = project_paths
+    let projects: Vec<NxProject> = affected_projects
         .iter()
-        .map(|path| NxProject::load(workspace_root, path))
+        .map(|path| NxProject::load(workspace, path))
         .collect::<Result<Vec<NxProject>>>()?;
 
     for project in projects {

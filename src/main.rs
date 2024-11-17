@@ -103,7 +103,7 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
 
-                let graph = affected::graph::build_graph(&workspace_root, &project_paths)?;
+                let graph = affected::graph::build_graph(&workspace, &project_paths)?;
 
                 if graph.node_count() == 0 {
                     println!("No projects affected");

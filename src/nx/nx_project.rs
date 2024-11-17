@@ -1,8 +1,8 @@
 use crate::projects::Project;
+use crate::workspace::Workspace;
 use anyhow::Result;
 use serde::Deserialize;
 use std::fs;
-use std::path::Path;
 
 /// A struct representing a Nx project
 #[derive(Debug, Deserialize)]
@@ -35,7 +35,8 @@ impl Project for NxProject {
         self.name.as_deref()
     }
 
-    fn load(workspace_root: &Path, project_path: &str) -> Result<Self> {
+    fn load(workspace: &Workspace, project_path: &str) -> Result<Self> {
+        let workspace_root = &workspace.root;
         let path = workspace_root.join(project_path).join("project.json");
         let contents = fs::read_to_string(path)?;
         let mut project: NxProject = serde_json::from_str(&contents)?;
