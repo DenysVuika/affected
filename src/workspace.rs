@@ -4,6 +4,7 @@ use crate::projects::Project;
 use crate::Config;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
+use globset::Glob;
 use ignore::WalkBuilder;
 use log::{debug, warn};
 use petgraph::Graph;
@@ -176,8 +177,28 @@ impl Workspace {
                     for dependency in dependencies {
                         if let Some(dependency_node) = project_indices.get(dependency) {
                             graph.add_edge(node_index, *dependency_node, ());
+                            affected_projects.insert(dependency.clone());
                         } else {
-                            warn!("Dependency {} not found", dependency);
+                            let glob = Glob::new(dependency)?.compile_matcher();
+                            let mut match_found = false;
+
+                            // check project indices for a match
+                            // for example: "shop-*" -> "shop-admin"
+                            for (name, index) in &project_indices {
+                                if glob.is_match(name) {
+                                    graph.add_edge(node_index, *index, ());
+                                    affected_projects.insert(name.clone());
+                                    match_found = true;
+                                    debug!(
+                                        "Implicit dependency: {} -> {}",
+                                        project_node.name, name
+                                    );
+                                }
+                            }
+
+                            if !match_found {
+                                warn!("Dependency {} not found", dependency);
+                            }
                         }
                     }
                 }
