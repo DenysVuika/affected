@@ -16,6 +16,9 @@ pub struct Workspace {
     config: Option<Config>,
     repo: Option<Repository>,
     graph: Option<WorkspaceGraph>,
+
+    affected_files: Option<HashSet<String>>,
+    affected_projects: Option<HashSet<String>>,
 }
 
 impl Workspace {
@@ -61,19 +64,25 @@ impl Workspace {
         //     .context("Failed to fetch from remote repository")?;
 
         self.repo = Some(repo);
-        self.graph = Some(build_projects_graph(self)?);
+        self.build_projects_graph()?;
 
         Ok(())
     }
 
     pub fn affected_files(&self) -> Result<HashSet<String>> {
-        let affected_files = get_affected_files(self)?;
-        Ok(affected_files)
+        if let Some(files) = &self.affected_files {
+            Ok(files.clone())
+        } else {
+            Ok(HashSet::new())
+        }
     }
 
     pub fn affected_projects(&self) -> Result<HashSet<String>> {
-        let affected_projects = get_affected_projects(&self)?;
-        Ok(affected_projects)
+        if let Some(projects) = &self.affected_projects {
+            Ok(projects.clone())
+        } else {
+            Ok(HashSet::new())
+        }
     }
 
     /// Returns a list of tasks defined in the configuration
@@ -102,9 +111,81 @@ impl Workspace {
     pub fn is_nx_project_dir(path: &Path) -> bool {
         path.is_dir() && path.join("project.json").is_file()
     }
+
+    fn build_projects_graph(&mut self) -> Result<()> {
+        let mut graph = WorkspaceGraph::new();
+        let mut project_indices = HashMap::new();
+
+        // todo: support package.json
+        let projects = inspect_workspace(&self.root, Workspace::is_nx_project_dir)?;
+        if projects.is_empty() {
+            return Ok(());
+        }
+
+        let affected_files = get_affected_files(self)?;
+        if affected_files.is_empty() {
+            return Ok(());
+        }
+
+        // todo: insert file nodes into the graph
+
+        let mut affected_projects = HashSet::new();
+
+        for project in &projects {
+            debug!("Project: {:?}", project);
+            // todo: support package.json
+            let nx_project = NxProject::load(&self.root, &project)?;
+            let project_name = nx_project.name().unwrap_or("Unnamed");
+            let project_path = nx_project.source_root.clone();
+
+            let project_node = graph.add_node(NodeType::Project(ProjectNode {
+                name: project_name.to_string(),
+                path: project_path,
+                implicit_dependencies: nx_project.implicit_dependencies.clone(),
+            }));
+
+            project_indices.insert(project_name.to_string(), project_node);
+
+            // find affected projects
+            for file in &affected_files {
+                if file.starts_with(project) {
+                    // todo: link file nodes to project nodes
+                    // println!("Affected project: {}", project);
+                    affected_projects.insert(project.clone());
+                }
+            }
+        }
+
+        // update the graph with implicit dependencies
+
+        for node_index in graph.node_indices() {
+            let node = graph[node_index].clone();
+
+            match node {
+                NodeType::Project(project_node) => {
+                    if let Some(dependencies) = &project_node.implicit_dependencies {
+                        for dependency in dependencies {
+                            if let Some(dependency_node) = project_indices.get(dependency) {
+                                graph.add_edge(node_index, *dependency_node, ());
+                            } else {
+                                warn!("Dependency {} not found", dependency);
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        self.graph = Some(graph);
+        self.affected_files = Some(affected_files);
+        self.affected_projects = Some(affected_projects);
+
+        Ok(())
+    }
 }
 
-pub fn get_affected_files(workspace: &Workspace) -> Result<HashSet<String>> {
+fn get_affected_files(workspace: &Workspace) -> Result<HashSet<String>> {
     let repo = workspace.repo.as_ref().expect("Repository not loaded");
     let config = workspace.config.as_ref().expect("Configuration not loaded");
 
@@ -165,81 +246,4 @@ pub fn get_affected_files(workspace: &Workspace) -> Result<HashSet<String>> {
     }
 
     Ok(result)
-}
-
-fn get_affected_projects(workspace: &Workspace) -> Result<HashSet<String>> {
-    let affected_files = get_affected_files(workspace)?;
-    if affected_files.is_empty() {
-        return Ok(HashSet::new());
-    }
-
-    let mut projects = inspect_workspace(&workspace.root, Workspace::is_project_dir)?;
-    if projects.is_empty() {
-        return Ok(HashSet::new());
-    }
-    projects.retain(|project| {
-        if affected_files.iter().any(|file| file.starts_with(project)) {
-            true
-        } else {
-            debug!("Skipping project '{}'", project);
-            false
-        }
-    });
-
-    Ok(projects)
-}
-
-fn build_projects_graph(workspace: &Workspace) -> Result<WorkspaceGraph> {
-    let mut graph = WorkspaceGraph::new();
-    let mut project_indices = HashMap::new();
-
-    // todo: support package.json
-    let projects = inspect_workspace(&workspace.root, Workspace::is_nx_project_dir)?;
-    if projects.is_empty() {
-        return Ok(graph);
-    }
-
-    let affected_files = get_affected_files(workspace)?;
-    if affected_files.is_empty() {
-        return Ok(graph);
-    }
-
-    for project in &projects {
-        debug!("Project: {:?}", project);
-        // todo: support package.json
-        let nx_project = NxProject::load(&workspace.root, &project)?;
-        let project_name = nx_project.name().unwrap_or("Unnamed");
-        let project_path = nx_project.source_root.clone();
-
-        let project_node = graph.add_node(NodeType::Project(ProjectNode {
-            name: project_name.to_string(),
-            path: project_path,
-            implicit_dependencies: nx_project.implicit_dependencies.clone(),
-        }));
-
-        project_indices.insert(project_name.to_string(), project_node);
-    }
-
-    // update the graph with implicit dependencies
-
-    for node_index in graph.node_indices() {
-        let node = graph[node_index].clone();
-
-        match node {
-            NodeType::Project(project_node) => {
-                if let Some(dependencies) = &project_node.implicit_dependencies {
-                    for dependency in dependencies {
-                        if let Some(dependency_node) = project_indices.get(dependency) {
-                            graph.add_edge(node_index, *dependency_node, ());
-                        } else {
-                            warn!("Dependency {} not found", dependency);
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-
-    Ok(graph)
 }
