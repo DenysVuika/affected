@@ -105,20 +105,23 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
 
-                let mut printed_nodes = HashSet::new();
+                let mut printed_nodes: HashSet<String> = HashSet::new();
 
                 for node_index in graph.node_indices() {
-                    let project_name = &graph[node_index];
-                    printed_nodes.insert(project_name);
-                    debug!("{}", project_name);
+                    let project_node = &graph[node_index];
+                    printed_nodes.insert(project_node.name.clone());
+                    debug!("{}", project_node.name);
                 }
 
                 for edge in graph.edge_indices() {
                     let (source, target) = graph.edge_endpoints(edge).unwrap();
-                    let source_name = &graph[source];
-                    let target_name = &graph[target];
-                    debug!("{} -> (implicit) -> {}", source_name, target_name);
-                    printed_nodes.insert(target_name);
+                    let source_node = &graph[source];
+                    let target_node = &graph[target];
+                    debug!(
+                        "{} -> (implicit) -> {}",
+                        &source_node.name, &target_node.name
+                    );
+                    printed_nodes.insert(target_node.name.clone());
                 }
 
                 for node in printed_nodes {
