@@ -58,17 +58,12 @@ impl Workspace {
     }
 
     pub fn affected_files(&self) -> Result<Vec<String>> {
-        let repo = self.repo.as_ref().expect("Repository not loaded");
-        let config = self.config.as_ref().expect("Configuration not loaded");
-        let affected_files = get_affected_files(repo, config)?;
+        let affected_files = get_affected_files(self)?;
         Ok(affected_files)
     }
 
     pub fn affected_projects(&self) -> Result<Vec<String>> {
-        let repo = self.repo.as_ref().expect("Repository not loaded");
-        let config = self.config.as_ref().expect("Configuration not loaded");
-        let affected_projects = get_affected_projects(&self.root, repo, config)?;
-
+        let affected_projects = get_affected_projects(&self)?;
         Ok(affected_projects)
     }
 
@@ -86,9 +81,20 @@ impl Workspace {
     pub async fn run_task(&self, task_name: &str) -> Result<()> {
         crate::tasks::run_task_by_name(self, task_name).await
     }
+
+    pub fn is_project_dir(path: &Path) -> bool {
+        path.is_dir()
+            && (
+                path.join("project.json").is_file() || path.join("package.json").is_file()
+                // || path.join("Cargo.toml").is_file()
+            )
+    }
 }
 
-pub fn get_affected_files(repo: &Repository, config: &Config) -> Result<Vec<String>> {
+pub fn get_affected_files(workspace: &Workspace) -> Result<Vec<String>> {
+    let repo = workspace.repo.as_ref().expect("Repository not loaded");
+    let config = workspace.config.as_ref().expect("Configuration not loaded");
+
     // Get the current branch (HEAD)
     let head = repo.head().context("Could not retrieve HEAD")?;
     let current_branch = head
@@ -148,17 +154,13 @@ pub fn get_affected_files(repo: &Repository, config: &Config) -> Result<Vec<Stri
     Ok(result)
 }
 
-fn get_affected_projects(
-    workspace_root: &PathBuf,
-    repo: &Repository,
-    config: &Config,
-) -> Result<Vec<String>> {
-    let affected_files: HashSet<_> = get_affected_files(repo, config)?.into_iter().collect();
+fn get_affected_projects(workspace: &Workspace) -> Result<Vec<String>> {
+    let affected_files: HashSet<_> = get_affected_files(workspace)?.into_iter().collect();
     if affected_files.is_empty() {
         return Ok(vec![]);
     }
 
-    let mut projects = inspect_workspace(workspace_root, is_project_dir)?;
+    let mut projects = inspect_workspace(&workspace.root, Workspace::is_project_dir)?;
     if projects.is_empty() {
         return Ok(vec![]);
     }
@@ -172,12 +174,4 @@ fn get_affected_projects(
     });
 
     Ok(projects)
-}
-
-pub fn is_project_dir(path: &Path) -> bool {
-    path.is_dir()
-        && (
-            path.join("project.json").is_file() || path.join("package.json").is_file()
-            // || path.join("Cargo.toml").is_file()
-        )
 }

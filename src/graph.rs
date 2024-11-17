@@ -1,10 +1,8 @@
 use crate::nx::NxProject;
 use crate::projects::Project;
-use crate::utils::inspect_workspace;
 use crate::workspace::Workspace;
 use anyhow::Result;
 use petgraph::Graph;
-use std::path::{Path, PathBuf};
 
 pub type WorkspaceGraph = Graph<ProjectNode, ()>;
 
@@ -57,9 +55,9 @@ pub fn build_graph(workspace: &Workspace) -> Result<WorkspaceGraph> {
     Ok(graph)
 }
 
-fn get_all_projects(workspace_root: &PathBuf) -> Result<Vec<String>> {
-    let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
-    let projects = inspect_workspace(workspace_root, filter_fn)?;
-
-    Ok(projects)
-}
+// fn get_all_projects(workspace_root: &PathBuf) -> Result<Vec<String>> {
+//     let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
+//     let projects = inspect_workspace(workspace_root, filter_fn)?;
+//
+//     Ok(projects)
+// }
