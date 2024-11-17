@@ -1,24 +1,26 @@
+use crate::graph::WorkspaceGraph;
 use crate::utils::inspect_workspace;
 use crate::Config;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
 use log::debug;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+#[derive(Default)]
 pub struct Workspace {
     pub root: PathBuf,
 
     config: Option<Config>,
     repo: Option<Repository>,
+    graph: Option<WorkspaceGraph>,
 }
 
 impl Workspace {
     pub fn new(root: impl Into<PathBuf>) -> Self {
         Self {
             root: root.into(),
-            config: None,
-            repo: None,
+            ..Default::default()
         }
     }
 
@@ -27,7 +29,7 @@ impl Workspace {
         Self {
             root: root.into(),
             config: Some(config),
-            repo: None,
+            ..Default::default()
         }
     }
 
@@ -53,6 +55,7 @@ impl Workspace {
         //     .context("Failed to fetch from remote repository")?;
 
         self.repo = Some(repo);
+        self.graph = Some(build_projects_graph(self)?);
 
         Ok(())
     }
@@ -174,4 +177,11 @@ fn get_affected_projects(workspace: &Workspace) -> Result<HashSet<String>> {
     });
 
     Ok(projects)
+}
+
+fn build_projects_graph(workspace: &Workspace) -> Result<WorkspaceGraph> {
+    let mut graph = WorkspaceGraph::new();
+    // let node_indices = HashMap::new();
+
+    Ok(graph)
 }
