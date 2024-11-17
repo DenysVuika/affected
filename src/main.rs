@@ -134,14 +134,14 @@ async fn main() -> Result<()> {
                 // println!("{:?}", graph);
             }
             ViewCommands::Tasks => {
-                if let Some(config) = workspace.config() {
-                    if let Some(tasks) = &config.tasks {
-                        for task in tasks {
-                            println!("{}", task);
-                        }
-                    } else {
-                        println!("No tasks defined");
-                    }
+                let tasks = workspace.tasks();
+                if tasks.is_empty() {
+                    println!("No tasks defined");
+                    return Ok(());
+                }
+
+                for task in tasks {
+                    println!("{}", task);
                 }
             }
         },

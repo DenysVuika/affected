@@ -86,4 +86,21 @@ impl Workspace {
 
         Ok(affected_projects)
     }
+
+    /// Clears the workspace cache
+    pub fn clear_cache(&mut self) {
+        self.cached_affected_files = None;
+        self.cached_affected_projects = None;
+    }
+
+    /// Returns a list of tasks defined in the configuration
+    pub fn tasks(&self) -> Vec<String> {
+        let config = self.config.as_ref().expect("Configuration not loaded");
+
+        if let Some(tasks) = &config.tasks {
+            tasks.iter().map(|task| task.name.clone()).collect()
+        } else {
+            vec![]
+        }
+    }
 }
