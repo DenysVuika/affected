@@ -134,7 +134,7 @@ impl Workspace {
         for project in &projects {
             debug!("Project: {:?}", project);
             // todo: support package.json
-            let nx_project = NxProject::load(&self.root, &project)?;
+            let nx_project = NxProject::load(&self.root, project)?;
             let project_name = nx_project.name().unwrap_or("Unnamed");
             let project_path = nx_project.source_root.clone();
 
@@ -161,19 +161,16 @@ impl Workspace {
         for node_index in graph.node_indices() {
             let node = graph[node_index].clone();
 
-            match node {
-                NodeType::Project(project_node) => {
-                    if let Some(dependencies) = &project_node.implicit_dependencies {
-                        for dependency in dependencies {
-                            if let Some(dependency_node) = project_indices.get(dependency) {
-                                graph.add_edge(node_index, *dependency_node, ());
-                            } else {
-                                warn!("Dependency {} not found", dependency);
-                            }
+            if let NodeType::Project(project_node) = node {
+                if let Some(dependencies) = &project_node.implicit_dependencies {
+                    for dependency in dependencies {
+                        if let Some(dependency_node) = project_indices.get(dependency) {
+                            graph.add_edge(node_index, *dependency_node, ());
+                        } else {
+                            warn!("Dependency {} not found", dependency);
                         }
                     }
                 }
-                _ => {}
             }
         }
 
