@@ -1,4 +1,3 @@
-use affected::graph::NodeType;
 use affected::logger::init_logger;
 use affected::workspace::Workspace;
 use affected::Config;
@@ -6,7 +5,6 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
 use log::debug;
-use std::collections::HashSet;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -99,45 +97,58 @@ async fn main() -> Result<()> {
             ViewCommands::Projects => {
                 workspace.load().await?;
 
-                let graph = affected::graph::build_graph(&workspace)?;
+                let projects = workspace.affected_projects()?;
 
-                if graph.node_count() == 0 {
+                if projects.is_empty() {
                     println!("No projects affected");
                     return Ok(());
                 }
 
-                let mut printed_nodes: HashSet<String> = HashSet::new();
-
-                for node_index in graph.node_indices() {
-                    let node = &graph[node_index];
-
-                    match node {
-                        NodeType::Project(project_node) => {
-                            printed_nodes.insert(project_node.name.clone());
-                            debug!("{}", project_node.name);
-                        }
-                        _ => {}
-                    }
+                for project in projects {
+                    println!("{}", project);
                 }
 
-                for edge in graph.edge_indices() {
-                    let (source, target) = graph.edge_endpoints(edge).unwrap();
-                    let source_node = &graph[source];
-                    let target_node = &graph[target];
-                    if let (NodeType::Project(source_project), NodeType::Project(target_project)) =
-                        (source_node, target_node)
-                    {
-                        debug!(
-                            "{} -> (implicit) -> {}",
-                            &source_project.name, &target_project.name
-                        );
-                        printed_nodes.insert(target_project.name.clone());
-                    }
-                }
+                /*
+                   let graph = affected::graph::build_graph(&workspace)?;
 
-                for node in printed_nodes {
-                    println!("{}", node);
-                }
+                   if graph.node_count() == 0 {
+                       println!("No projects affected");
+                       return Ok(());
+                   }
+
+                   let mut printed_nodes: HashSet<String> = HashSet::new();
+
+                   for node_index in graph.node_indices() {
+                       let node = &graph[node_index];
+
+                       match node {
+                           NodeType::Project(project_node) => {
+                               printed_nodes.insert(project_node.name.clone());
+                               debug!("{}", project_node.name);
+                           }
+                           _ => {}
+                       }
+                   }
+
+                   for edge in graph.edge_indices() {
+                       let (source, target) = graph.edge_endpoints(edge).unwrap();
+                       let source_node = &graph[source];
+                       let target_node = &graph[target];
+                       if let (NodeType::Project(source_project), NodeType::Project(target_project)) =
+                           (source_node, target_node)
+                       {
+                           debug!(
+                               "{} -> (implicit) -> {}",
+                               &source_project.name, &target_project.name
+                           );
+                           printed_nodes.insert(target_project.name.clone());
+                       }
+                   }
+
+                   for node in printed_nodes {
+                       println!("{}", node);
+                   }
+                */
 
                 // println!("{:?}", graph);
             }
