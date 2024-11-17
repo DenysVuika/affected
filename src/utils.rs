@@ -1,8 +1,9 @@
 use anyhow::Result;
 use ignore::WalkBuilder;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub fn inspect_workspace<F>(workspace_root: &PathBuf, filter_fn: F) -> Result<Vec<String>>
+pub fn inspect_workspace<F>(workspace_root: &PathBuf, filter_fn: F) -> Result<HashSet<String>>
 where
     F: Fn(&Path) -> bool,
 {
@@ -11,7 +12,7 @@ where
         .standard_filters(true) // Respect .gitignore, .ignore, etc.
         .build();
 
-    let mut paths = vec![];
+    let mut paths = HashSet::new();
 
     for result in walker {
         match result {
@@ -24,7 +25,7 @@ where
                         continue;
                     }
                     if filter_fn(&path) {
-                        paths.push(relative_path.to_string_lossy().to_string());
+                        paths.insert(relative_path.to_string_lossy().to_string());
                     }
                 }
             }

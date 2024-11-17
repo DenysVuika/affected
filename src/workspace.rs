@@ -57,12 +57,12 @@ impl Workspace {
         Ok(())
     }
 
-    pub fn affected_files(&self) -> Result<Vec<String>> {
+    pub fn affected_files(&self) -> Result<HashSet<String>> {
         let affected_files = get_affected_files(self)?;
         Ok(affected_files)
     }
 
-    pub fn affected_projects(&self) -> Result<Vec<String>> {
+    pub fn affected_projects(&self) -> Result<HashSet<String>> {
         let affected_projects = get_affected_projects(&self)?;
         Ok(affected_projects)
     }
@@ -91,7 +91,7 @@ impl Workspace {
     }
 }
 
-pub fn get_affected_files(workspace: &Workspace) -> Result<Vec<String>> {
+pub fn get_affected_files(workspace: &Workspace) -> Result<HashSet<String>> {
     let repo = workspace.repo.as_ref().expect("Repository not loaded");
     let config = workspace.config.as_ref().expect("Configuration not loaded");
 
@@ -143,26 +143,26 @@ pub fn get_affected_files(workspace: &Workspace) -> Result<Vec<String>> {
     //     repo.diff_tree_to_tree(Some(&base_tree), Some(&current_tree), Some(&mut diff_opts))?;
     let diff = repo.diff_tree_to_workdir_with_index(Some(&base_tree), Some(&mut diff_opts))?;
 
-    let mut result = vec![];
+    let mut result = HashSet::new();
 
     for delta in diff.deltas() {
         if let Some(path) = delta.new_file().path() {
-            result.push(path.to_string_lossy().to_string());
+            result.insert(path.to_string_lossy().to_string());
         }
     }
 
     Ok(result)
 }
 
-fn get_affected_projects(workspace: &Workspace) -> Result<Vec<String>> {
+fn get_affected_projects(workspace: &Workspace) -> Result<HashSet<String>> {
     let affected_files: HashSet<_> = get_affected_files(workspace)?.into_iter().collect();
     if affected_files.is_empty() {
-        return Ok(vec![]);
+        return Ok(HashSet::new());
     }
 
     let mut projects = inspect_workspace(&workspace.root, Workspace::is_project_dir)?;
     if projects.is_empty() {
-        return Ok(vec![]);
+        return Ok(HashSet::new());
     }
     projects.retain(|project| {
         if affected_files.iter().any(|file| file.starts_with(project)) {
