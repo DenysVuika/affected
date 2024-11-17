@@ -1,9 +1,11 @@
-use crate::graph::WorkspaceGraph;
+use crate::graph::{NodeType, ProjectNode, WorkspaceGraph};
+use crate::nx::NxProject;
+use crate::projects::Project;
 use crate::utils::inspect_workspace;
 use crate::Config;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
-use log::debug;
+use log::{debug, warn};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -39,6 +41,10 @@ impl Workspace {
 
     pub fn repo(&self) -> Option<&Repository> {
         self.repo.as_ref()
+    }
+
+    pub fn graph(&self) -> Option<&WorkspaceGraph> {
+        self.graph.as_ref()
     }
 
     /// Loads the repository
@@ -91,6 +97,10 @@ impl Workspace {
                 path.join("project.json").is_file() || path.join("package.json").is_file()
                 // || path.join("Cargo.toml").is_file()
             )
+    }
+
+    pub fn is_nx_project_dir(path: &Path) -> bool {
+        path.is_dir() && path.join("project.json").is_file()
     }
 }
 
@@ -158,7 +168,7 @@ pub fn get_affected_files(workspace: &Workspace) -> Result<HashSet<String>> {
 }
 
 fn get_affected_projects(workspace: &Workspace) -> Result<HashSet<String>> {
-    let affected_files: HashSet<_> = get_affected_files(workspace)?.into_iter().collect();
+    let affected_files = get_affected_files(workspace)?;
     if affected_files.is_empty() {
         return Ok(HashSet::new());
     }
@@ -181,7 +191,55 @@ fn get_affected_projects(workspace: &Workspace) -> Result<HashSet<String>> {
 
 fn build_projects_graph(workspace: &Workspace) -> Result<WorkspaceGraph> {
     let mut graph = WorkspaceGraph::new();
-    // let node_indices = HashMap::new();
+    let mut project_indices = HashMap::new();
+
+    // todo: support package.json
+    let projects = inspect_workspace(&workspace.root, Workspace::is_nx_project_dir)?;
+    if projects.is_empty() {
+        return Ok(graph);
+    }
+
+    let affected_files = get_affected_files(workspace)?;
+    if affected_files.is_empty() {
+        return Ok(graph);
+    }
+
+    for project in &projects {
+        debug!("Project: {:?}", project);
+        // todo: support package.json
+        let nx_project = NxProject::load(&workspace.root, &project)?;
+        let project_name = nx_project.name().unwrap_or("Unnamed");
+        let project_path = nx_project.source_root.clone();
+
+        let project_node = graph.add_node(NodeType::Project(ProjectNode {
+            name: project_name.to_string(),
+            path: project_path,
+            implicit_dependencies: nx_project.implicit_dependencies.clone(),
+        }));
+
+        project_indices.insert(project_name.to_string(), project_node);
+    }
+
+    // update the graph with implicit dependencies
+
+    for node_index in graph.node_indices() {
+        let node = graph[node_index].clone();
+
+        match node {
+            NodeType::Project(project_node) => {
+                if let Some(dependencies) = &project_node.implicit_dependencies {
+                    for dependency in dependencies {
+                        if let Some(dependency_node) = project_indices.get(dependency) {
+                            graph.add_edge(node_index, *dependency_node, ());
+                        } else {
+                            warn!("Dependency {} not found", dependency);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
 
     Ok(graph)
 }
