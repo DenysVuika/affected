@@ -1,5 +1,4 @@
 use affected::logger::init_logger;
-use affected::tasks;
 use affected::workspace::Workspace;
 use affected::Config;
 use anyhow::Result;
@@ -147,10 +146,7 @@ async fn main() -> Result<()> {
         },
         Commands::Run { task } => {
             workspace.load().await?;
-            let repo = workspace.repo().expect("No repository found");
-            let config = workspace.config().expect("No configuration found");
-
-            match tasks::run_task_by_name(&workspace_root, repo, config, task).await {
+            match workspace.run_task(task).await {
                 Ok(_) => println!("Done"),
                 Err(err) => log::error!("Failed to run task: {}", err),
             }

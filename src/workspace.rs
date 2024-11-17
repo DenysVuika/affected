@@ -24,6 +24,7 @@ impl Workspace {
         }
     }
 
+    /// Creates a new workspace with a configuration
     pub fn with_config(root: impl Into<PathBuf>, config: Config) -> Self {
         Self {
             root: root.into(),
@@ -42,6 +43,7 @@ impl Workspace {
         self.repo.as_ref()
     }
 
+    /// Loads the repository
     pub async fn load(&mut self) -> Result<()> {
         let repo = Repository::open(&self.root).expect("Could not open the repository");
 
@@ -102,5 +104,12 @@ impl Workspace {
         } else {
             vec![]
         }
+    }
+
+    pub async fn run_task(&self, task_name: &str) -> Result<()> {
+        let repo = self.repo.as_ref().expect("Repository not loaded");
+        let config = self.config.as_ref().expect("Configuration not loaded");
+
+        crate::tasks::run_task_by_name(&self.root, repo, config, task_name).await
     }
 }
