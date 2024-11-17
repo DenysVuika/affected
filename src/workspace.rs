@@ -1,4 +1,4 @@
-use crate::graph::{NodeType, ProjectNode, WorkspaceGraph};
+use crate::graph::{NodeType, ProjectNode};
 use crate::nx::NxProject;
 use crate::projects::Project;
 use crate::utils::inspect_workspace;
@@ -6,8 +6,11 @@ use crate::Config;
 use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
 use log::{debug, warn};
+use petgraph::Graph;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+
+pub type WorkspaceGraph = Graph<NodeType, ()>;
 
 #[derive(Default)]
 pub struct Workspace {
