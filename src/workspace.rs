@@ -132,7 +132,7 @@ impl Workspace {
             return Ok(());
         }
 
-        let affected_files = get_affected_files(self)?;
+        let affected_files = find_affected_files(self)?;
         if affected_files.is_empty() {
             return Ok(());
         }
@@ -192,7 +192,7 @@ impl Workspace {
     }
 }
 
-fn get_affected_files(workspace: &Workspace) -> Result<HashSet<String>> {
+fn find_affected_files(workspace: &Workspace) -> Result<HashSet<String>> {
     let repo = workspace.repo.as_ref().expect("Repository not loaded");
     let config = workspace.config.as_ref().expect("Configuration not loaded");
 
