@@ -5,7 +5,6 @@ mod node;
 pub mod nx;
 mod projects;
 pub mod tasks;
-mod utils;
 pub mod workspace;
 
 pub use config::Config;
