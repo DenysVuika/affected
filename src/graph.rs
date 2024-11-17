@@ -57,22 +57,7 @@ pub fn build_graph(workspace: &Workspace) -> Result<WorkspaceGraph> {
                 graph.add_edge(project_node, dependency_node, ());
             });
         }
-
-        // let project_dependencies = project.dependencies();
-        // for dependency in project_dependencies {
-        //     let dependency_name = dependency.name().unwrap_or("Unnamed");
-        //     let dependency_node = graph.add_node(dependency_name.to_string());
-        //
-        //     graph.add_edge(project_node, dependency_node, 1);
-        // }
     }
 
     Ok(graph)
 }
-
-// fn get_all_projects(workspace_root: &PathBuf) -> Result<Vec<String>> {
-//     let filter_fn = |path: &Path| path.is_dir() && path.join("project.json").is_file();
-//     let projects = inspect_workspace(workspace_root, filter_fn)?;
-//
-//     Ok(projects)
-// }
