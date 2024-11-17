@@ -4,11 +4,14 @@ use crate::workspace::Workspace;
 use anyhow::Result;
 use petgraph::Graph;
 
-pub fn build_graph(
-    workspace: &Workspace,
-    affected_projects: &[String],
-) -> Result<Graph<String, ()>> {
+pub fn build_graph(workspace: &Workspace) -> Result<Graph<String, ()>> {
     let mut graph = Graph::new();
+
+    let affected_projects = workspace.affected_projects()?;
+    if affected_projects.is_empty() {
+        return Ok(graph);
+    }
+
     let projects: Vec<NxProject> = affected_projects
         .iter()
         .map(|path| NxProject::load(workspace, path))

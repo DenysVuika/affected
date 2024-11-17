@@ -97,13 +97,8 @@ async fn main() -> Result<()> {
             }
             ViewCommands::Projects => {
                 workspace.load().await?;
-                let project_paths = workspace.affected_projects()?;
-                if project_paths.is_empty() {
-                    println!("No projects affected");
-                    return Ok(());
-                }
 
-                let graph = affected::graph::build_graph(&workspace, &project_paths)?;
+                let graph = affected::graph::build_graph(&workspace)?;
 
                 if graph.node_count() == 0 {
                     println!("No projects affected");
