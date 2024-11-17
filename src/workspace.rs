@@ -72,6 +72,10 @@ impl Workspace {
         Ok(())
     }
 
+    /// Returns a list of affected files.
+    ///
+    /// The list is calculated based on the changes between the current branch and the base branch.
+    /// Note that files that were removed are also included in the list.
     pub fn affected_files(&self) -> Result<HashSet<String>> {
         if let Some(files) = &self.affected_files {
             Ok(files.clone())
@@ -80,6 +84,9 @@ impl Workspace {
         }
     }
 
+    /// Returns a list of affected projects.
+    ///
+    /// The list is calculated based on the changes between the current branch and the base branch.
     pub fn affected_projects(&self) -> Result<HashSet<String>> {
         if let Some(projects) = &self.affected_projects {
             Ok(projects.clone())
