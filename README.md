@@ -225,3 +225,48 @@ affected view files
 # Full debug output
 LOG_LEVEL=DEBUG affected run lint
 ```
+
+## Recipes
+
+### Run ESLint on affected files
+
+```yaml
+tasks:
+  - name: lint
+    description: Runs eslint for all affected files
+    patterns: [ '*.{ts,tsx,js,jsx}' ]
+    commands: [ 'npx eslint {files}' ]
+```
+
+### Run Prettier on affected files
+
+```yaml
+tasks:
+  - name: prettier
+    description: Runs prettier for all affected files
+    patterns: [ '*.{ts,tsx,js,jsx}' ]
+    commands: [ 'npx prettier --check {files}' ]
+```
+
+### Run Karma on affected files
+
+```yaml
+tasks:
+  - name: karma
+    description: Runs karma for all affected files
+    patterns: [ '*.spec.ts' ]
+    separator: ',' # Comma-separated list
+    commands: [ 'npx karma start --include {files}' ] 
+```
+
+### Run Jest on affected files
+
+```yaml
+tasks:
+  - name: jest
+    description: Runs jest for all affected files
+    patterns: [ '*.spec.ts' ]
+    commands: [ 'npx jest --findRelatedTests --passWithNoTests -c <jest-config> {files}' ]
+```
+
+Where `<jest-config>` is the path to the Jest configuration file.
