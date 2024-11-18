@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "affected")]
-#[command(about = "A tool to find affected files or projects in a git repository", long_about = None)]
+#[command(about = "A tool to find affected files or projects in a git repository and run commands on them.", long_about = None)]
 struct Cli {
     /// Optional repo path, defaults to current directory
     #[arg(long)]
