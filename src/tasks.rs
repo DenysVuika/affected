@@ -1,27 +1,20 @@
-use crate::{get_affected_files, Config};
+use crate::workspace::Workspace;
 use anyhow::{bail, Context, Result};
-use git2::Repository;
 use globset::{Glob, GlobSetBuilder};
 use log::debug;
-use std::path::Path;
 use std::process::Stdio;
 use tokio::process::Command;
 
-pub async fn run_task_by_name(
-    workspace_root: &Path,
-    repo: &Repository,
-    config: &Config,
-    task_name: &str,
-) -> Result<()> {
+pub async fn run_task_by_name(workspace: &Workspace, task_name: &str) -> Result<()> {
     debug!("Running task: {}", task_name);
-
+    let config = workspace.config().context("No configuration found")?;
     let task = config.get_task(task_name).context("Task not found")?;
-    let file_paths = get_affected_files(repo, config)?;
+    let file_paths = workspace.affected_files()?;
 
     // filter out files that exist on the filesystem
     let file_paths: Vec<_> = file_paths
         .into_iter()
-        .filter(|path| workspace_root.join(path).exists())
+        .filter(|path| workspace.root.join(path).exists())
         .collect();
 
     if file_paths.is_empty() {
@@ -66,7 +59,7 @@ pub async fn run_task_by_name(
         let command_text = template.replace("{files}", files);
         debug!("Running command: {}", &command_text);
 
-        let workspace_root = workspace_root.to_path_buf();
+        let workspace_root = workspace.root.to_path_buf();
         let handle = tokio::spawn(async move {
             let mut child = Command::new("sh")
                 .arg("-c")
