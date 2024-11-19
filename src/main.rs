@@ -43,8 +43,16 @@ enum Commands {
 
 #[derive(Subcommand)]
 enum ViewCommands {
-    Files,
-    Projects,
+    Files {
+        /// Output format: json or text
+        #[arg(long, default_value = "text")]
+        format: String,
+    },
+    Projects {
+        /// Output format: json or text
+        #[arg(long, default_value = "text")]
+        format: String,
+    },
     Tasks,
 }
 
@@ -86,15 +94,28 @@ async fn main() -> Result<()> {
         }
 
         Commands::View(subcommand) => match subcommand {
-            ViewCommands::Files => {
+            ViewCommands::Files { format } => {
                 workspace.load().await?;
 
                 let files = workspace.affected_files()?;
-                for file in files {
-                    println!("{}", file);
+                if files.is_empty() {
+                    println!("No files affected");
+                    return Ok(());
+                }
+
+                match format.as_str() {
+                    "json" => {
+                        let json_output = serde_json::to_string_pretty(&files)?;
+                        println!("{}", json_output);
+                    }
+                    _ => {
+                        for file in files {
+                            println!("{}", file);
+                        }
+                    }
                 }
             }
-            ViewCommands::Projects => {
+            ViewCommands::Projects { format } => {
                 workspace.load().await?;
 
                 let projects = workspace.affected_projects()?;
@@ -104,8 +125,16 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
 
-                for project in projects {
-                    println!("{}", project);
+                match format.as_str() {
+                    "json" => {
+                        let json_output = serde_json::to_string_pretty(&projects)?;
+                        println!("{}", json_output);
+                    }
+                    _ => {
+                        for project in projects {
+                            println!("{}", project);
+                        }
+                    }
                 }
 
                 /*
