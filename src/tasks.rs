@@ -1,3 +1,4 @@
+use crate::config::Task;
 use crate::workspace::Workspace;
 use anyhow::{bail, Context, Result};
 use globset::{Glob, GlobSetBuilder};
@@ -5,10 +6,23 @@ use log::debug;
 use std::process::Stdio;
 use tokio::process::Command;
 
-pub async fn run_task_by_name(workspace: &Workspace, task_name: &str) -> Result<()> {
-    debug!("Running task: {}", task_name);
+pub async fn run_tasks(workspace: &Workspace, pattern: &str) -> Result<()> {
     let config = workspace.config().context("No configuration found")?;
-    let task = config.get_task(task_name).context("Task not found")?;
+    let tasks = config.get_tasks(pattern);
+
+    if tasks.is_empty() {
+        println!("No tasks matched the pattern");
+        return Ok(());
+    }
+
+    for task in tasks {
+        run_task(workspace, task).await?;
+    }
+
+    Ok(())
+}
+
+async fn run_task(workspace: &Workspace, task: &Task) -> Result<()> {
     let file_paths = workspace.affected_files()?;
 
     // filter out files that exist on the filesystem

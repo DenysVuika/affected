@@ -79,7 +79,7 @@ Options:
     - `files` - List affected files
     - `projects` - List affected projects
     - `tasks` - List defined tasks
-- `run [task]` - Run a task on affected files or projects
+- `run [task|glob]` - Run a task on affected files or projects
 
 For more information on a command, use the `help` command.
 
@@ -136,10 +136,17 @@ tasks:
       - npx prettier --check {files}
 ```
 
-Example:
+Examples:
 
 ```bash
+# view the tasks defined in the configuration file
+affected view tasks
+
+# run the task named 'lint'
 affected run lint
+
+# run tasks by a glob pattern (e.g. 'project:1', 'project:2', etc.)
+affected run "project:*"
 ```
 
 ### File Separators
@@ -159,6 +166,41 @@ tasks:
 ```
 
 The default separator is a space.
+
+### Using Glob Patterns
+
+Glob patterns can be used to run multiple tasks on different file types.
+
+```yaml
+# .affected.yml
+base: develop
+tasks:
+  - name: echo:1
+    description: Echoes the affected files (example)
+    patterns:
+      - '*'
+    commands:
+      - echo 'one'
+  - name: echo:2
+    description: Echoes the affected files (example)
+    patterns:
+      - '*'
+    commands:
+      - echo 'two'
+```
+
+Run the tasks:
+
+```bash
+affected run "echo:*"
+```
+
+The output is:
+
+```bash
+one
+two
+```
 
 ### Environment Variables
 
@@ -227,6 +269,8 @@ LOG_LEVEL=DEBUG affected run lint
 ```
 
 ## Recipes
+
+Below are some examples of tasks that can be defined in the `.affected.yml` file.
 
 ### Run ESLint on affected files
 
