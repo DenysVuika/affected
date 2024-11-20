@@ -1,6 +1,6 @@
 use affected::logger::init_logger;
 use affected::workspace::Workspace;
-use affected::Config;
+use affected::{print_lines, Config};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
@@ -121,17 +121,7 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
 
-                match format.as_str() {
-                    "json" => {
-                        let json_output = serde_json::to_string_pretty(&files)?;
-                        println!("{}", json_output);
-                    }
-                    _ => {
-                        for file in files {
-                            println!("{}", file);
-                        }
-                    }
-                }
+                print_lines(&files, format)?;
             }
             ViewCommands::Projects { format } => {
                 workspace.load().await?;
@@ -143,17 +133,7 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
 
-                match format.as_str() {
-                    "json" => {
-                        let json_output = serde_json::to_string_pretty(&projects)?;
-                        println!("{}", json_output);
-                    }
-                    _ => {
-                        for project in projects {
-                            println!("{}", project);
-                        }
-                    }
-                }
+                print_lines(&projects, format)?;
 
                 /*
                    let graph = affected::graph::build_graph(&workspace)?;
