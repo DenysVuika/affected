@@ -57,7 +57,7 @@ impl Workspace {
 
     /// Loads the repository
     pub async fn load(&mut self) -> Result<()> {
-        let repo = Repository::open(&self.root).expect("Could not open the repository");
+        let repo = Repository::open(&self.root).context("Could not open the repository")?;
 
         // TODO: introduce flag to fetch from remote
         // Fetch the latest changes from the remote repository

@@ -95,7 +95,10 @@ async fn main() -> Result<()> {
 
         Commands::View(subcommand) => match subcommand {
             ViewCommands::Files { format } => {
-                workspace.load().await?;
+                if let Err(err) = workspace.load().await {
+                    log::error!("Failed to load workspace: {}", err);
+                    return Ok(());
+                }
 
                 let files = workspace.affected_files()?;
                 if files.is_empty() {
