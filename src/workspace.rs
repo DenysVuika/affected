@@ -1,3 +1,4 @@
+use crate::config::Task;
 use crate::graph::{NodeType, ProjectNode};
 use crate::nx::NxProject;
 use crate::projects::Project;
@@ -97,14 +98,12 @@ impl Workspace {
     }
 
     /// Returns a list of tasks defined in the configuration
-    pub fn tasks(&self) -> Vec<String> {
+    pub fn tasks(&self) -> Vec<&Task> {
         let config = self.config.as_ref().expect("Configuration not loaded");
-
-        if let Some(tasks) = &config.tasks {
-            tasks.iter().map(|task| task.name.clone()).collect()
-        } else {
-            vec![]
-        }
+        config
+            .tasks
+            .as_ref()
+            .map_or_else(Vec::new, |tasks| tasks.iter().collect())
     }
 
     pub async fn run_task(&self, pattern: &str) -> Result<()> {

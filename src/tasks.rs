@@ -16,7 +16,7 @@ pub async fn run_tasks(workspace: &Workspace, pattern: &str) -> Result<()> {
     }
 
     for task in tasks {
-        run_task(workspace, &task).await?;
+        run_task(workspace, task).await?;
     }
 
     Ok(())

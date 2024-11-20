@@ -59,7 +59,7 @@ impl Default for Config {
 }
 
 #[skip_serializing_none]
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct Task {
     pub name: String,
     pub description: Option<String>,
