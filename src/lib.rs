@@ -8,12 +8,19 @@ pub mod tasks;
 pub mod workspace;
 
 use anyhow::Result;
+use clap::ValueEnum;
 pub use config::Config;
 use std::collections::HashSet;
 
-pub fn print_lines(lines: &HashSet<String>, format: &str) -> Result<()> {
+#[derive(ValueEnum, Clone, Debug)]
+pub enum OutputFormat {
+    Json,
+    Text,
+}
+
+pub fn print_lines(lines: &HashSet<String>, format: &OutputFormat) -> Result<()> {
     match format {
-        "json" => {
+        OutputFormat::Json => {
             let json_output = serde_json::to_string_pretty(&lines)?;
             println!("{}", json_output);
         }

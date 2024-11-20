@@ -1,6 +1,6 @@
 use affected::logger::init_logger;
 use affected::workspace::Workspace;
-use affected::{print_lines, Config};
+use affected::{print_lines, Config, OutputFormat};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
@@ -52,13 +52,13 @@ enum ViewCommands {
     Files {
         /// Output format: json or text
         #[arg(long, default_value = "text")]
-        format: String,
+        format: OutputFormat,
     },
     /// View affected projects
     Projects {
         /// Output format: json or text
         #[arg(long, default_value = "text")]
-        format: String,
+        format: OutputFormat,
     },
     /// View tasks defined in the configuration.
     Tasks,
