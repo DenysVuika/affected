@@ -107,8 +107,8 @@ impl Workspace {
         }
     }
 
-    pub async fn run_task(&self, task_name: &str) -> Result<()> {
-        crate::tasks::run_task_by_name(self, task_name).await
+    pub async fn run_task(&self, pattern: &str) -> Result<()> {
+        crate::tasks::run_tasks(self, pattern).await
     }
 
     pub fn is_project_dir(path: &Path) -> bool {

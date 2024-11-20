@@ -1,4 +1,5 @@
 use anyhow::Result;
+use globset::Glob;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::fs::File;
@@ -17,6 +18,19 @@ impl Config {
         self.tasks
             .as_ref()
             .and_then(|tasks| tasks.iter().find(|task| task.name == task_name))
+    }
+
+    pub fn get_tasks(&self, pattern: &str) -> Vec<&Task> {
+        let glob = Glob::new(pattern).unwrap().compile_matcher();
+        self.tasks
+            .as_ref()
+            .map(|tasks| {
+                tasks
+                    .iter()
+                    .filter(|task| glob.is_match(&task.name))
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 }
 
