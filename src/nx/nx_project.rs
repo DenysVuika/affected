@@ -39,9 +39,10 @@ impl Project for NxProject {
     fn load(workspace_root: &Path, project_path: &str) -> Result<Self> {
         let path = workspace_root.join(project_path).join("project.json");
         debug!("Loading project from {:?}", path);
-        let contents = fs::read_to_string(path).expect("Could not read project.json");
-        let mut project: NxProject =
-            serde_json::from_str(&contents).expect("Could not parse project.json");
+        let contents = fs::read_to_string(path)
+            .unwrap_or_else(|_| panic!("Could not read {}/project.json", &project_path));
+        let mut project: NxProject = serde_json::from_str(&contents)
+            .unwrap_or_else(|_| panic!("Could not parse {}/project.json", &project_path));
 
         if project.root.is_none() {
             project.root = Some(project_path.to_string());

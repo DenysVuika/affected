@@ -1,6 +1,6 @@
 use affected::logger::init_logger;
 use affected::workspace::Workspace;
-use affected::{print_lines, Config, OutputFormat};
+use affected::{find_git_root, print_lines, Config, OutputFormat};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
@@ -73,9 +73,11 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
-    let workspace_root = cli
+    let starting_dir = cli
         .repo
         .unwrap_or_else(|| std::env::current_dir().expect("Failed to get the repository path"));
+    let workspace_root = find_git_root(&starting_dir).expect("Failed to find the git repository");
+
     debug!("Using repository: {:?}", &workspace_root);
 
     let base = cli.base.clone().or(Some("main".to_string()));
