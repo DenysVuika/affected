@@ -73,10 +73,11 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
-    let starting_dir = cli
-        .repo
-        .unwrap_or_else(|| std::env::current_dir().expect("Failed to get the repository path"));
-    let workspace_root = find_git_root(&starting_dir).expect("Failed to find the git repository");
+    let starting_dir = cli.repo.unwrap_or_else(|| {
+        std::env::current_dir().expect("The command should be run in a git repository")
+    });
+    let workspace_root =
+        find_git_root(&starting_dir).expect("The command should be run in a git repository");
 
     debug!("Using repository: {:?}", &workspace_root);
 
