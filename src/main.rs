@@ -1,10 +1,10 @@
 use affected::logger::init_logger;
 use affected::workspace::Workspace;
-use affected::Config;
+use affected::{find_git_root, print_lines, Config, OutputFormat};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
-use log::debug;
+use log::{debug, error};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -27,32 +27,40 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Initialize the configuration file
-    Init,
+    Init {
+        /// Overwrite the existing configuration file
+        #[arg(long)]
+        force: bool,
+    },
 
     /// View affected files or projects
     #[command(subcommand)]
     View(ViewCommands),
 
-    /// Run a specific task
+    /// Run a specific task.
+    /// Supports glob patterns to filter tasks.
     #[command(arg_required_else_help = true)]
     Run {
-        /// The task to run
+        /// The task to run (supports glob patterns)
         task: String,
     },
 }
 
 #[derive(Subcommand)]
 enum ViewCommands {
+    /// View affected files
     Files {
         /// Output format: json or text
         #[arg(long, default_value = "text")]
-        format: String,
+        format: OutputFormat,
     },
+    /// View affected projects
     Projects {
         /// Output format: json or text
         #[arg(long, default_value = "text")]
-        format: String,
+        format: OutputFormat,
     },
+    /// View tasks defined in the configuration.
     Tasks,
 }
 
@@ -65,12 +73,14 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
-    let workspace_root = cli
+    let starting_dir = cli
         .repo
         .unwrap_or_else(|| std::env::current_dir().expect("Failed to get the repository path"));
+    let workspace_root = find_git_root(&starting_dir).expect("Failed to find the git repository");
+
     debug!("Using repository: {:?}", &workspace_root);
 
-    // let config = Config::from_env();
+    let base = cli.base.clone().or(Some("main".to_string()));
 
     let config_path = workspace_root.join(".affected.yml");
     let config = if config_path.exists() {
@@ -79,7 +89,7 @@ async fn main() -> Result<()> {
     } else {
         debug!("Config file not found, using a default one");
         Config {
-            base: cli.base.clone().or(Some("main".to_string())),
+            base: base.clone(),
             ..Default::default()
         }
     };
@@ -87,15 +97,25 @@ async fn main() -> Result<()> {
     let mut workspace = Workspace::with_config(&workspace_root, config);
 
     match &cli.command {
-        Commands::Init => {
-            let config = workspace.config().expect("No configuration found");
+        Commands::Init { force } => {
+            if config_path.exists() && !force {
+                error!("Config file already exists. Remove it to reinitialize, or use --force to overwrite.");
+                return Ok(());
+            }
+            let config = Config {
+                base: base.clone(),
+                ..Default::default()
+            };
             config.to_file(&config_path)?;
             println!("Config file created at {:?}", &config_path);
         }
 
         Commands::View(subcommand) => match subcommand {
             ViewCommands::Files { format } => {
-                workspace.load().await?;
+                if let Err(err) = workspace.load().await {
+                    log::error!("Failed to load workspace: {}", err);
+                    return Ok(());
+                }
 
                 let files = workspace.affected_files()?;
                 if files.is_empty() {
@@ -103,17 +123,7 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
 
-                match format.as_str() {
-                    "json" => {
-                        let json_output = serde_json::to_string_pretty(&files)?;
-                        println!("{}", json_output);
-                    }
-                    _ => {
-                        for file in files {
-                            println!("{}", file);
-                        }
-                    }
-                }
+                print_lines(&files, format)?;
             }
             ViewCommands::Projects { format } => {
                 workspace.load().await?;
@@ -125,17 +135,7 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
 
-                match format.as_str() {
-                    "json" => {
-                        let json_output = serde_json::to_string_pretty(&projects)?;
-                        println!("{}", json_output);
-                    }
-                    _ => {
-                        for project in projects {
-                            println!("{}", project);
-                        }
-                    }
-                }
+                print_lines(&projects, format)?;
 
                 /*
                    let graph = affected::graph::build_graph(&workspace)?;
