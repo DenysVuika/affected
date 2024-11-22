@@ -110,9 +110,6 @@ tasks:
     patterns: [ '*.{ts,tsx,js,jsx}' ]
     separator: ' ' # Optional separator for the files list
     commands: [ 'npx eslint {files}' ]
-
-    # Running eslint for affected files
-    # commands: [ 'npx eslint {files}' ]
 ```
 
 The `name` field is the name of the task.  

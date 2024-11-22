@@ -1,5 +1,5 @@
 use crate::config::Task;
-use crate::graph::{NodeType, ProjectNode};
+use crate::graph::{check_graph_recursively, NodeType, ProjectNode};
 use crate::nx::NxProject;
 use crate::projects::Project;
 use crate::Config;
@@ -7,7 +7,7 @@ use anyhow::{bail, Context, Result};
 use git2::{BranchType, DiffOptions, Repository};
 use globset::Glob;
 use ignore::WalkBuilder;
-use log::{debug, warn};
+use log::debug;
 use petgraph::Graph;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -146,11 +146,11 @@ impl Workspace {
             // todo: support package.json
             let nx_project = NxProject::load(&self.root, project)?;
             let project_name = nx_project.name().unwrap_or("Unnamed");
-            let project_path = nx_project.source_root.clone();
+            let project_root = nx_project.source_root.clone();
 
             let project_node = graph.add_node(NodeType::Project(ProjectNode {
                 name: project_name.to_string(),
-                path: project_path,
+                path: project_root,
                 implicit_dependencies: nx_project.implicit_dependencies.clone(),
             }));
 
@@ -159,9 +159,7 @@ impl Workspace {
             // find affected projects
             for file in &affected_files {
                 if file.starts_with(project) {
-                    // todo: link file nodes to project nodes
-                    // println!("Affected project: {}", project);
-                    affected_projects.insert(project.clone());
+                    affected_projects.insert(project_name.to_string());
                 }
             }
         }
@@ -176,27 +174,15 @@ impl Workspace {
                     for dependency in dependencies {
                         if let Some(dependency_node) = project_indices.get(dependency) {
                             graph.add_edge(node_index, *dependency_node, ());
-                            affected_projects.insert(dependency.clone());
+                            // println!("{} -> {}", project_node.name, dependency);
                         } else {
                             let glob = Glob::new(dependency)?.compile_matcher();
-                            let mut match_found = false;
-
-                            // check project indices for a match
                             // for example: "shop-*" -> "shop-admin"
                             for (name, index) in &project_indices {
                                 if glob.is_match(name) {
                                     graph.add_edge(node_index, *index, ());
-                                    affected_projects.insert(name.clone());
-                                    match_found = true;
-                                    debug!(
-                                        "Implicit dependency: {} -> {}",
-                                        project_node.name, name
-                                    );
+                                    // println!("{} -> {}", project_node.name, name);
                                 }
-                            }
-
-                            if !match_found {
-                                warn!("Dependency {} not found", dependency);
                             }
                         }
                     }
@@ -204,9 +190,11 @@ impl Workspace {
             }
         }
 
+        let all_affected_projects = check_graph_recursively(&graph, &affected_projects);
+
         self.graph = Some(graph);
         self.affected_files = Some(affected_files);
-        self.affected_projects = Some(affected_projects);
+        self.affected_projects = Some(all_affected_projects);
 
         Ok(())
     }

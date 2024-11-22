@@ -24,6 +24,7 @@ pub async fn run_tasks(workspace: &Workspace, pattern: &str) -> Result<()> {
 
 async fn run_task(workspace: &Workspace, task: &Task) -> Result<()> {
     let file_paths = workspace.affected_files()?;
+    let projects: Vec<String> = workspace.affected_projects()?.into_iter().collect();
 
     // filter out files that exist on the filesystem
     let file_paths: Vec<_> = file_paths
@@ -65,12 +66,15 @@ async fn run_task(workspace: &Workspace, task: &Task) -> Result<()> {
 
     let separator = task.separator.as_deref().unwrap_or(" ");
     let files = &filtered_paths.join(separator);
+    let projects = &projects.join(separator);
 
     let mut handles = Vec::new();
 
     for command_template in &task.commands {
         let template = command_template.clone();
-        let command_text = template.replace("{files}", files);
+        let command_text = template
+            .replace("{files}", files)
+            .replace("{projects}", projects);
         debug!("Running command: {}", &command_text);
 
         let workspace_root = workspace.root.to_path_buf();
