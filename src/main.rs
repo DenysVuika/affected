@@ -4,8 +4,9 @@ use affected::{find_git_root, print_lines, Config, OutputFormat};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
-use log::{debug, error};
+use log::{debug, error, info};
 use std::path::PathBuf;
+use std::time::Instant;
 
 #[derive(Parser)]
 #[command(name = "affected")]
@@ -42,7 +43,7 @@ enum Commands {
     #[command(arg_required_else_help = true)]
     Run {
         /// The task to run (supports glob patterns)
-        task: String,
+        tasks: Vec<String>,
     },
 }
 
@@ -150,12 +151,24 @@ async fn main() -> Result<()> {
                 }
             }
         },
-        Commands::Run { task } => {
+        Commands::Run { tasks } => {
             workspace.load().await?;
-            match workspace.run_task(task).await {
-                Ok(_) => println!("Done"),
-                Err(err) => log::error!("Failed to run task: {}", err),
+
+            let now = Instant::now();
+
+            // TODO: support running tasks in parallel (with extra `--parallel` flag)
+            for task in tasks {
+                match workspace.run_task(task).await {
+                    Ok(_) => debug!("Task '{}' completed successfully", task),
+                    Err(err) => {
+                        error!("Failed to run task '{}': {}", task, err);
+                        std::process::exit(1);
+                    }
+                }
             }
+
+            let elapsed = now.elapsed();
+            info!("Done ({:.2?})", elapsed);
         }
     }
 
