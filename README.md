@@ -81,7 +81,7 @@ Options:
     - `projects` - List affected projects
         - `--format=json|text` - Output format (default: text)
     - `tasks` - List defined tasks
-- `run [task|glob]` - Run a task on affected files or projects
+- `run [task(s)|glob]` - Run a task(s) on affected files or projects
 
 For more information on a command, use the `help` command.
 
@@ -143,6 +143,9 @@ affected view tasks
 
 # run the task named 'lint'
 affected run lint
+
+# run multiple tasks
+affected run lint prettier
 
 # run tasks by a glob pattern (e.g. 'project:1', 'project:2', etc.)
 affected run "project:*"
