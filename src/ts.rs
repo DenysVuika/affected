@@ -72,6 +72,11 @@ pub fn execute_common_js() {
 
     // Example TypeScript code with both `import` and `require`
     let ts_code = r#"
+        import { A } from './a';
+        import B from './b';
+        import * as C from './c';
+        import './side-effect-only';
+
         import { Injectable } from '@angular/core';
         const uuidv4 = require('uuid/v4');
     "#;

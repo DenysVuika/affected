@@ -188,7 +188,7 @@ async fn main() -> Result<()> {
             let first_file = files.iter().next().unwrap();
             println!("First file: {}", first_file);
 
-            execute_esm();
+            // execute_esm();
             execute_common_js();
         }
     }
