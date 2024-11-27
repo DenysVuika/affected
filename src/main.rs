@@ -1,4 +1,5 @@
 use affected::logger::init_logger;
+use affected::ts;
 use affected::workspace::Workspace;
 use affected::{find_git_root, print_lines, Config, OutputFormat};
 use anyhow::Result;
@@ -45,6 +46,8 @@ enum Commands {
         /// The task to run (supports glob patterns)
         tasks: Vec<String>,
     },
+
+    Test,
 }
 
 #[derive(Subcommand)]
@@ -169,6 +172,24 @@ async fn main() -> Result<()> {
 
             let elapsed = now.elapsed();
             info!("Done ({:.2?})", elapsed);
+        }
+        Commands::Test => {
+            if let Err(err) = workspace.load().await {
+                log::error!("Failed to load workspace: {}", err);
+                return Ok(());
+            }
+
+            let files = workspace.affected_files()?;
+            if files.is_empty() {
+                println!("No files affected");
+                return Ok(());
+            }
+
+            let first_file = files.iter().next().unwrap();
+            println!("First file: {}", first_file);
+
+            ts::execute_common_js();
+            ts::resolver::demo();
         }
     }
 

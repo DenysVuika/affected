@@ -5,6 +5,7 @@ mod node;
 pub mod nx;
 mod projects;
 pub mod tasks;
+pub mod ts;
 pub mod workspace;
 
 use anyhow::Result;
