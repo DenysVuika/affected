@@ -1,5 +1,4 @@
 use affected::logger::init_logger;
-use affected::resolver;
 use affected::ts;
 use affected::workspace::Workspace;
 use affected::{find_git_root, print_lines, Config, OutputFormat};
@@ -189,8 +188,8 @@ async fn main() -> Result<()> {
             let first_file = files.iter().next().unwrap();
             println!("First file: {}", first_file);
 
-            // ts::execute_common_js();
-            resolver::demo();
+            ts::execute_common_js();
+            ts::resolver::demo();
         }
     }
 

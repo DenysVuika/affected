@@ -4,7 +4,6 @@ pub mod logger;
 mod node;
 pub mod nx;
 mod projects;
-pub mod resolver;
 pub mod tasks;
 pub mod ts;
 pub mod workspace;
