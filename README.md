@@ -77,9 +77,9 @@ Options:
 - `init` - Initialize the configuration file
 - `view` - View affected files or projects
     - `files` - List affected files
-        - `--format=json|text` - Output format (default: text)
+        - `--format=table|json|text` - Output format (default: text)
     - `projects` - List affected projects
-        - `--format=json|text` - Output format (default: text)
+        - `--format=table|json|text` - Output format (default: text)
     - `tasks` - List defined tasks
 - `run [task(s)|glob]` - Run a task(s) on affected files or projects
 

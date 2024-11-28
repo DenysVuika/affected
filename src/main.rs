@@ -1,7 +1,8 @@
 use affected::logger::init_logger;
+use affected::reports;
 use affected::ts;
 use affected::workspace::Workspace;
-use affected::{find_git_root, print_lines, Config, OutputFormat};
+use affected::{find_git_root, Config, OutputFormat};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
@@ -54,13 +55,13 @@ enum Commands {
 enum ViewCommands {
     /// View affected files
     Files {
-        /// Output format: json or text
+        /// Output format
         #[arg(long, default_value = "text")]
         format: OutputFormat,
     },
     /// View affected projects
     Projects {
-        /// Output format: json or text
+        /// Output format
         #[arg(long, default_value = "text")]
         format: OutputFormat,
     },
@@ -122,25 +123,20 @@ async fn main() -> Result<()> {
                     return Ok(());
                 }
 
-                let files = workspace.affected_files()?;
-                if files.is_empty() {
-                    println!("No files affected");
-                    return Ok(());
-                }
-
-                print_lines(&files, format)?;
+                reports::display_affected_files(&workspace, format)?;
             }
             ViewCommands::Projects { format } => {
                 workspace.load().await?;
+                reports::display_affected_projects(&workspace, format)?;
 
-                let projects = workspace.affected_projects()?;
-
-                if projects.is_empty() {
-                    println!("No projects affected");
-                    return Ok(());
-                }
-
-                print_lines(&projects, format)?;
+                // let projects = workspace.affected_projects()?;
+                //
+                // if projects.is_empty() {
+                //     println!("No projects affected");
+                //     return Ok(());
+                // }
+                //
+                // print_lines(&projects, format, "Path")?;
             }
             ViewCommands::Tasks => {
                 let tasks = workspace.tasks();
