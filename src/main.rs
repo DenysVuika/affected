@@ -56,17 +56,21 @@ enum ViewCommands {
     /// View affected files
     Files {
         /// Output format
-        #[arg(long, default_value = "text")]
+        #[arg(long, default_value = "table")]
         format: OutputFormat,
     },
     /// View affected projects
     Projects {
         /// Output format
-        #[arg(long, default_value = "text")]
+        #[arg(long, default_value = "table")]
         format: OutputFormat,
     },
     /// View tasks defined in the configuration.
-    Tasks,
+    Tasks {
+        /// Output format
+        #[arg(long, default_value = "table")]
+        format: OutputFormat,
+    },
 }
 
 #[tokio::main]
@@ -122,32 +126,21 @@ async fn main() -> Result<()> {
                     log::error!("Failed to load workspace: {}", err);
                     return Ok(());
                 }
-
                 reports::display_affected_files(&workspace, format)?;
             }
             ViewCommands::Projects { format } => {
-                workspace.load().await?;
-                reports::display_affected_projects(&workspace, format)?;
-
-                // let projects = workspace.affected_projects()?;
-                //
-                // if projects.is_empty() {
-                //     println!("No projects affected");
-                //     return Ok(());
-                // }
-                //
-                // print_lines(&projects, format, "Path")?;
-            }
-            ViewCommands::Tasks => {
-                let tasks = workspace.tasks();
-                if tasks.is_empty() {
-                    println!("No tasks defined");
+                if let Err(err) = workspace.load().await {
+                    log::error!("Failed to load workspace: {}", err);
                     return Ok(());
                 }
-
-                for task in tasks {
-                    println!("{}", task);
+                reports::display_affected_projects(&workspace, format)?;
+            }
+            ViewCommands::Tasks { format } => {
+                if let Err(err) = workspace.load().await {
+                    log::error!("Failed to load workspace: {}", err);
+                    return Ok(());
                 }
+                reports::display_tasks(&workspace, format)?;
             }
         },
         Commands::Run { tasks } => {
