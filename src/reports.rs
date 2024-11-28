@@ -39,8 +39,37 @@ pub fn display_tasks(workspace: &Workspace, format: &OutputFormat) -> Result<()>
         return Ok(());
     }
 
-    for task in tasks {
-        println!("{}", task);
+    match format {
+        OutputFormat::Json => {
+            let json_output = serde_json::to_string_pretty(&tasks)?;
+            println!("{}", json_output);
+        }
+        OutputFormat::Table => {
+            let mut builder = Builder::default();
+            builder.push_record(["#", "Name", "Description", "Patterns"]);
+
+            for (index, task) in tasks.iter().enumerate().map(|(i, task)| (i + 1, task)) {
+                builder.push_record([
+                    &index.to_string(),
+                    &task.name.clone(),
+                    &task.description.clone().unwrap_or_default(),
+                    &task
+                        .patterns
+                        .as_ref()
+                        .map_or(String::new(), |p| p.join(", ")),
+                ]);
+            }
+
+            let mut table = builder.build();
+            table.with(Style::modern());
+
+            println!("{}", table);
+        }
+        _ => {
+            for task in tasks {
+                println!("{}", task.name);
+            }
+        }
     }
 
     Ok(())
