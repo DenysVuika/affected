@@ -92,9 +92,20 @@ For the feature branch checked out, and the main branch is `develop`:
 ```bash
 # List all affected files in the current repository
 affected --base=develop view files
+#┌───┬─────────────────────────────────────────────────────────┐
+#│ # │ Path                                                    │
+#├───┼─────────────────────────────────────────────────────────┤
+#│ 1 │ libs/my-project/sdk/src/lib/services/uuid.service.ts    │
+#└───┴─────────────────────────────────────────────────────────┘
 
 # List all affected projects in a different repository
 affected --repo=/path/to/repo --base=develop view projects
+#┌────┬───────────────────────────────────────────────────┐
+#│ #  │ Project                                           │
+#├────┼───────────────────────────────────────────────────┤
+#│ 1  │ my-project                                        │
+#│ 2  │ my-project-e2e                                    │
+#└─── ┴───────────────────────────────────────────────────┘
 ```
 
 ## Tasks
