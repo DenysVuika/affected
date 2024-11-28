@@ -1,7 +1,8 @@
 use affected::logger::init_logger;
+use affected::reports;
 use affected::ts;
 use affected::workspace::Workspace;
-use affected::{find_git_root, print_lines, Config, OutputFormat};
+use affected::{find_git_root, Config, OutputFormat};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
@@ -54,18 +55,22 @@ enum Commands {
 enum ViewCommands {
     /// View affected files
     Files {
-        /// Output format: json or text
-        #[arg(long, default_value = "text")]
+        /// Output format
+        #[arg(long, default_value = "table")]
         format: OutputFormat,
     },
     /// View affected projects
     Projects {
-        /// Output format: json or text
-        #[arg(long, default_value = "text")]
+        /// Output format
+        #[arg(long, default_value = "table")]
         format: OutputFormat,
     },
     /// View tasks defined in the configuration.
-    Tasks,
+    Tasks {
+        /// Output format
+        #[arg(long, default_value = "table")]
+        format: OutputFormat,
+    },
 }
 
 #[tokio::main]
@@ -121,37 +126,21 @@ async fn main() -> Result<()> {
                     log::error!("Failed to load workspace: {}", err);
                     return Ok(());
                 }
-
-                let files = workspace.affected_files()?;
-                if files.is_empty() {
-                    println!("No files affected");
-                    return Ok(());
-                }
-
-                print_lines(&files, format)?;
+                reports::display_affected_files(&workspace, format)?;
             }
             ViewCommands::Projects { format } => {
-                workspace.load().await?;
-
-                let projects = workspace.affected_projects()?;
-
-                if projects.is_empty() {
-                    println!("No projects affected");
+                if let Err(err) = workspace.load().await {
+                    log::error!("Failed to load workspace: {}", err);
                     return Ok(());
                 }
-
-                print_lines(&projects, format)?;
+                reports::display_affected_projects(&workspace, format)?;
             }
-            ViewCommands::Tasks => {
-                let tasks = workspace.tasks();
-                if tasks.is_empty() {
-                    println!("No tasks defined");
+            ViewCommands::Tasks { format } => {
+                if let Err(err) = workspace.load().await {
+                    log::error!("Failed to load workspace: {}", err);
                     return Ok(());
                 }
-
-                for task in tasks {
-                    println!("{}", task);
-                }
+                reports::display_tasks(&workspace, format)?;
             }
         },
         Commands::Run { tasks } => {

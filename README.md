@@ -77,9 +77,9 @@ Options:
 - `init` - Initialize the configuration file
 - `view` - View affected files or projects
     - `files` - List affected files
-        - `--format=json|text` - Output format (default: text)
+        - `--format=table|json|text` - Output format (default: text)
     - `projects` - List affected projects
-        - `--format=json|text` - Output format (default: text)
+        - `--format=table|json|text` - Output format (default: text)
     - `tasks` - List defined tasks
 - `run [task(s)|glob]` - Run a task(s) on affected files or projects
 
@@ -93,8 +93,34 @@ For the feature branch checked out, and the main branch is `develop`:
 # List all affected files in the current repository
 affected --base=develop view files
 
+#┌───┬─────────────────────────────────────────────────────────┐
+#│ # │ Path                                                    │
+#├───┼─────────────────────────────────────────────────────────┤
+#│ 1 │ libs/my-project/sdk/src/lib/services/uuid.service.ts    │
+#└───┴─────────────────────────────────────────────────────────┘
+
 # List all affected projects in a different repository
 affected --repo=/path/to/repo --base=develop view projects
+
+#┌────┬───────────────────────────────────────────────────┐
+#│ #  │ Project                                           │
+#├────┼───────────────────────────────────────────────────┤
+#│ 1  │ my-project                                        │
+#│ 2  │ my-project-e2e                                    │
+#└─── ┴───────────────────────────────────────────────────┘
+
+# List all tasks in current repository
+affected --base=develop view tasks
+
+#┌───┬────────────────┬────────────────────────────────────────────┬───────────────────┐
+#│ # │ Name           │ Description                                │ Patterns          │
+#├───┼────────────────┼────────────────────────────────────────────┼───────────────────┤
+#│ 1 │ eslint         │ Runs eslint for all affected files         │ *.{ts,tsx,js,jsx} │
+#├───┼────────────────┼────────────────────────────────────────────┼───────────────────┤
+#│ 2 │ prettier:check │ Runs prettier check for all affected files │ *.{ts,tsx,js,jsx} │
+#├───┼────────────────┼────────────────────────────────────────────┼───────────────────┤
+#│ 3 │ prettier:write │ Runs prettier write for all affected files │ *.{ts,tsx,js,jsx} │
+#└───┴────────────────┴────────────────────────────────────────────┴───────────────────┘
 ```
 
 ## Tasks
